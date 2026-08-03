@@ -1,11 +1,10 @@
-import Message from "../components/Message";
+import Chat from "../components/Chat";
 
 function Home() {
     return (
         <main>
             <h1>SmartChat AI</h1>
-            <p>What can I help you with?</p>
-            <Message text="nigga" sender="assistant" />
+            <Chat />
         </main>
     );
 }

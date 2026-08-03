@@ -1,9 +1,6 @@
-type MessageProps = {
-    text: string;
-    sender: "user" | "assistant";
-};
+import type { MessageType } from "../types/message";
 
-function Message({ text, sender }: MessageProps) {
+function Message({ id, text, sender, timestamp }: MessageType) {
     return (
         <div>
             <strong>{sender === "user" ? "You: " : "AI: "}</strong>
