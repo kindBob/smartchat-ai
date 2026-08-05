@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { MessageType } from "../types/message";
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
+import "./Chat.scss";
 
 type CreateMessageParams = {
     id: number;
@@ -34,20 +35,84 @@ function Chat() {
     function createMessage({ id, text, sender }: CreateMessageParams): MessageType {
         return {
             id,
-            text: sender === "assistant" ? "You said: " + text : text,
+            text,
             sender,
             timestamp: new Date(),
         };
     }
 
     function addAssistantMessage(userMessage: string) {
+        const response = "You said: " + userMessage;
+
+        //Add empty assistant message
         setMessages((prevMessages) => [
             ...prevMessages,
-            createMessage({ id: prevMessages.length + 1, text: userMessage, sender: "assistant" }),
+            createMessage({ id: prevMessages.length + 1, text: "", sender: "assistant" }),
         ]);
 
-        setIsTyping(false);
+        let index = 0;
+
+        const interval = setInterval(() => {
+            const currentChar = response[index];
+
+            setMessages((prevMessages) =>
+                prevMessages.map((message, i) => {
+                    if (i !== prevMessages.length - 1) return message;
+
+                    return {
+                        ...message,
+                        text: message.text + currentChar,
+                    };
+                })
+            );
+
+            index++;
+
+            if (index >= response.length) {
+                clearInterval(interval);
+                setIsTyping(false);
+            }
+        }, 50);
     }
+
+    // function addAssistantMessage(userMessage: string) {
+    //     const response = "You said: " + userMessage;
+
+    //     // Add empty assistant message
+    //     setMessages((prev) => [
+    //         ...prev,
+    //         createMessage({
+    //             id: prev.length + 1,
+    //             text: "",
+    //             sender: "assistant",
+    //         }),
+    //     ]);
+
+    //     let index = 0;
+
+    //     const interval = setInterval(() => {
+    //         setMessages((prev) =>
+    //             prev.map((message, messageIndex) => {
+    //                 // Update only the last message
+    //                 if (messageIndex !== prev.length - 1) {
+    //                     return message;
+    //                 }
+
+    //                 return {
+    //                     ...message,
+    //                     text: message.text + response[index - 1],
+    //                 };
+    //             })
+    //         );
+
+    //         index++;
+
+    //         if (index >= response.length) {
+    //             clearInterval(interval);
+    //             setIsTyping(false);
+    //         }
+    //     }, 50);
+    // }
 
     function handleSend(text: string) {
         setMessages((prevMessages) => [
@@ -56,13 +121,13 @@ function Chat() {
         ]);
         setIsTyping(true);
 
-        setTimeout(() => addAssistantMessage(text), 5000);
+        setTimeout(() => addAssistantMessage(text), 1000);
     }
 
     return (
-        <div>
+        <div className="chat">
             <MessageList messages={messages} isTyping={isTyping} />
-            <ChatInput onSend={handleSend} onClear={clearMessages} />
+            <ChatInput onSend={handleSend} onClear={clearMessages} isTyping={isTyping} />
         </div>
     );
 }

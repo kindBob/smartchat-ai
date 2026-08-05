@@ -1,9 +1,12 @@
 import Chat from "../components/Chat";
+import Sidebar from "../components/Sidebar";
+
+import "./Home.scss";
 
 function Home() {
     return (
-        <main>
-            <h1>SmartChat AI</h1>
+        <main className="home">
+            <Sidebar />
             <Chat />
         </main>
     );

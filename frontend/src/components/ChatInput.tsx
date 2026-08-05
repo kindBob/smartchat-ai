@@ -1,11 +1,13 @@
 import { useState } from "react";
+import "./ChatInput.scss";
 
 type ChatInputProps = {
     onSend: (text: string) => void;
     onClear: () => void;
+    isTyping: boolean;
 };
 
-function ChatInput({ onSend, onClear }: ChatInputProps) {
+function ChatInput({ onSend, onClear, isTyping }: ChatInputProps) {
     const [value, setValue] = useState("");
 
     function sendMessage() {
@@ -16,9 +18,10 @@ function ChatInput({ onSend, onClear }: ChatInputProps) {
     }
 
     return (
-        <div>
+        <div className="chat-input">
             <input
                 value={value}
+                disabled={isTyping}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
