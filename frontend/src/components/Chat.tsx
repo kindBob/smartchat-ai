@@ -10,6 +10,15 @@ type CreateMessageParams = {
     sender: "user" | "assistant";
 };
 
+type ChatType = {
+    parts: [
+        {
+            text: string;
+        }
+    ];
+    role: "user" | "model";
+};
+
 function Chat() {
     const [isTyping, setIsTyping] = useState(false);
     const [messages, setMessages] = useState<MessageType[]>([
@@ -41,10 +50,22 @@ function Chat() {
         };
     }
 
-    function addAssistantMessage(userMessage: string) {
-        const response = "You said: " + userMessage;
+    async function addAssistantMessage(conversation: ChatType[]) {
+        const request = await fetch("http://localhost:3000/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                messages: conversation,
+            }),
+        });
+
+        const data = await request.json();
+        const aiResponse = data.response;
 
         //Add empty assistant message
+        setIsTyping(false);
         setMessages((prevMessages) => [
             ...prevMessages,
             createMessage({ id: prevMessages.length + 1, text: "", sender: "assistant" }),
@@ -53,7 +74,7 @@ function Chat() {
         let index = 0;
 
         const interval = setInterval(() => {
-            const currentChar = response[index];
+            const currentChar = aiResponse[index];
 
             setMessages((prevMessages) =>
                 prevMessages.map((message, i) => {
@@ -68,60 +89,38 @@ function Chat() {
 
             index++;
 
-            if (index >= response.length) {
+            if (index >= aiResponse.length) {
                 clearInterval(interval);
-                setIsTyping(false);
             }
-        }, 50);
+        }, 30);
     }
 
-    // function addAssistantMessage(userMessage: string) {
-    //     const response = "You said: " + userMessage;
-
-    //     // Add empty assistant message
-    //     setMessages((prev) => [
-    //         ...prev,
-    //         createMessage({
-    //             id: prev.length + 1,
-    //             text: "",
-    //             sender: "assistant",
-    //         }),
-    //     ]);
-
-    //     let index = 0;
-
-    //     const interval = setInterval(() => {
-    //         setMessages((prev) =>
-    //             prev.map((message, messageIndex) => {
-    //                 // Update only the last message
-    //                 if (messageIndex !== prev.length - 1) {
-    //                     return message;
-    //                 }
-
-    //                 return {
-    //                     ...message,
-    //                     text: message.text + response[index - 1],
-    //                 };
-    //             })
-    //         );
-
-    //         index++;
-
-    //         if (index >= response.length) {
-    //             clearInterval(interval);
-    //             setIsTyping(false);
-    //         }
-    //     }, 50);
-    // }
-
-    function handleSend(text: string) {
+    function handleSend(userMessage: string) {
         setMessages((prevMessages) => [
             ...prevMessages,
-            createMessage({ id: prevMessages.length + 1, text: text, sender: "user" }),
+            createMessage({ id: prevMessages.length + 1, text: userMessage, sender: "user" }),
         ]);
         setIsTyping(true);
 
-        setTimeout(() => addAssistantMessage(text), 1000);
+        const conversation: ChatType[] = messages.map((message) => ({
+            role: message.sender === "assistant" ? "model" : "user",
+            parts: [
+                {
+                    text: message.text,
+                },
+            ],
+        }));
+
+        conversation.push({
+            role: "user",
+            parts: [
+                {
+                    text: userMessage,
+                },
+            ],
+        });
+
+        addAssistantMessage(conversation);
     }
 
     return (
