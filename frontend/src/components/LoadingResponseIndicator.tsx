@@ -1,4 +1,4 @@
-import "./TypingIndicator.scss";
+import "./LoadingResponseIndicator.scss";
 
 function TypingIndicator() {
     return (

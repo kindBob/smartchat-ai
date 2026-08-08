@@ -4,4 +4,6 @@ export type ChatType = {
     id: string;
     title: string;
     messages: MessageType[];
+    isTyping: boolean;
+    isResponseLoading: boolean;
 };

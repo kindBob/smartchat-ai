@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar";
 import type { MessageType } from "../types/Message";
 import type { ChatType } from "../types/Chat";
 
 import "./Home.scss";
+
+const CHATS_STORAGE_KEY = "smartchat-chats";
+const ACTIVE_CHAT_STORAGE_KEY = "smartchat-active-chat";
 
 type ConversationType = {
     parts: [
@@ -21,19 +24,42 @@ function Home() {
             id: crypto.randomUUID(),
             title: "React Questions",
             messages: [createInitialMessage()],
+            isTyping: false,
+            isResponseLoading: false,
         },
         {
             id: crypto.randomUUID(),
             title: "Workout",
             messages: [createInitialMessage()],
+            isTyping: false,
+            isResponseLoading: false,
         },
     ];
 
-    const [chats, setChats] = useState<ChatType[]>(initialChats);
-    const [activeChatId, setActiveChatId] = useState<string | null>(initialChats[0].id);
-    const [isTyping, setIsTyping] = useState(false);
+    const [chats, setChats] = useState<ChatType[]>(() => {
+        const storedChats = localStorage.getItem(CHATS_STORAGE_KEY);
 
-    const activeChat = chats.find((chat) => chat.id === activeChatId);
+        if (storedChats) {
+            return JSON.parse(storedChats);
+        }
+
+        return initialChats;
+    });
+    const [activeChatId, setActiveChatId] = useState<string>(() => {
+        const storedActiveChatId = localStorage.getItem(ACTIVE_CHAT_STORAGE_KEY);
+
+        return storedActiveChatId ?? initialChats[0].id;
+    });
+
+    const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
+
+    useEffect(() => {
+        localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats));
+    }, [chats]);
+
+    useEffect(() => {
+        localStorage.setItem(ACTIVE_CHAT_STORAGE_KEY, activeChatId);
+    }, [activeChatId]);
 
     function createInitialMessage(): MessageType {
         return {
@@ -49,6 +75,8 @@ function Home() {
             id: crypto.randomUUID(),
             title: "New Chat",
             messages: [createInitialMessage()],
+            isTyping: false,
+            isResponseLoading: false,
         };
 
         setChats((prev) => [newChat, ...prev]);
@@ -69,6 +97,8 @@ function Home() {
     }
 
     async function generateAssistantResponse(conversation: ConversationType[]) {
+        const currentChatId = activeChatId;
+
         try {
             const request = await fetch("http://localhost:3000/chat", {
                 method: "POST",
@@ -87,10 +117,12 @@ function Home() {
 
             setChats((prevChats) =>
                 prevChats.map((chat) => {
-                    if (chat.id !== activeChatId) return chat;
+                    if (chat.id !== currentChatId) return chat;
 
                     return {
                         ...chat,
+                        isTyping: true,
+                        isResponseLoading: false,
                         messages: [...chat.messages, assistantMessage],
                     };
                 })
@@ -123,12 +155,32 @@ function Home() {
 
                 if (index >= aiResponse.length) {
                     clearInterval(interval);
-                    setIsTyping(false);
+
+                    setChats((prevChats) =>
+                        prevChats.map((chat) => {
+                            if (chat.id !== currentChatId) return chat;
+
+                            return {
+                                ...chat,
+                                isTyping: false,
+                            };
+                        })
+                    );
                 }
             }, 30);
         } catch (error) {
             console.log("Error generating assistant message:", error);
-            setIsTyping(false);
+            setChats((prevChats) =>
+                prevChats.map((chat) => {
+                    if (chat.id !== currentChatId) return chat;
+
+                    return {
+                        ...chat,
+                        isTyping: false,
+                        isResponseLoading: false,
+                    };
+                })
+            );
         }
     }
 
@@ -141,11 +193,11 @@ function Home() {
 
                 return {
                     ...chat,
+                    isResponseLoading: true,
                     messages: [...chat.messages, newMessage],
                 };
             })
         );
-        setIsTyping(true);
 
         const conversation: ConversationType[] = [...activeChat.messages, newMessage].map((message) => ({
             role: message.sender === "assistant" ? "model" : "user",
@@ -167,7 +219,7 @@ function Home() {
                 onSelectChat={(id) => selectChat(id)}
                 activeChatId={activeChatId}
             />
-            <Chat chat={activeChat} onSend={sendMessage} isTyping={isTyping} />
+            <Chat chat={activeChat} onSend={sendMessage} />
         </main>
     );
 }

@@ -1,20 +1,20 @@
 import { useEffect, useRef } from "react";
 import type { MessageType } from "../types/Message";
 import Message from "./Message";
-import TypingIndicator from "./TypingIndicator";
+import LoadingResponseIndicator from "./LoadingResponseIndicator";
 import "./MessageList.scss";
 
 type MessageListProps = {
     messages: MessageType[];
-    isTyping: boolean;
+    isResponseLoading: boolean;
 };
 
-function MessageList({ messages, isTyping }: MessageListProps) {
+function MessageList({ messages, isResponseLoading }: MessageListProps) {
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, isTyping]);
+    }, [messages, isResponseLoading]);
 
     return (
         <div className="message-list">
@@ -22,7 +22,7 @@ function MessageList({ messages, isTyping }: MessageListProps) {
                 return <Message key={message.id} {...message} />;
             })}
 
-            {isTyping && <TypingIndicator />}
+            {isResponseLoading && <LoadingResponseIndicator />}
             <div ref={bottomRef}></div>
         </div>
     );
