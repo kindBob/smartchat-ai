@@ -1,10 +1,27 @@
+import type { ChatType } from "../types/Chat";
 import "./Sidebar.scss";
 
-function Sidebar() {
+type SidebarProps = {
+    chats: ChatType[];
+    activeChatId: string | null;
+    onSelectChat: (id: string) => void;
+    onNewChat: () => void;
+};
+
+function Sidebar({ chats, activeChatId, onSelectChat, onNewChat }: SidebarProps) {
     return (
-        <div className="sidebar">
-            <h1>SmartChat AI</h1>
-        </div>
+        <aside className="sidebar">
+            <button onClick={onNewChat}>+ New Chat</button>
+
+            {chats.map((chat) => (
+                <div
+                    className={"sidebar__chat " + (chat.id === activeChatId ? "active" : "")}
+                    key={chat.id}
+                    onClick={() => onSelectChat(chat.id)}>
+                    {chat.title}
+                </div>
+            ))}
+        </aside>
     );
 }
 

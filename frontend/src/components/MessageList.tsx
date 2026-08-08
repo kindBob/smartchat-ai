@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { MessageType } from "../types/message";
+import type { MessageType } from "../types/Message";
 import Message from "./Message";
 import TypingIndicator from "./TypingIndicator";
 import "./MessageList.scss";

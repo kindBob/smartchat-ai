@@ -1,4 +1,4 @@
-import type { MessageType } from "../types/message";
+import type { MessageType } from "../types/Message";
 
 function Message({ id, text, sender, timestamp }: MessageType) {
     return (

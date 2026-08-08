@@ -3,11 +3,10 @@ import "./ChatInput.scss";
 
 type ChatInputProps = {
     onSend: (text: string) => void;
-    onClear: () => void;
     isTyping: boolean;
 };
 
-function ChatInput({ onSend, onClear, isTyping }: ChatInputProps) {
+function ChatInput({ onSend, isTyping }: ChatInputProps) {
     const [value, setValue] = useState("");
 
     function sendMessage() {
@@ -24,13 +23,13 @@ function ChatInput({ onSend, onClear, isTyping }: ChatInputProps) {
                 disabled={isTyping}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
                         sendMessage();
                     }
                 }}
             />
             <button onClick={sendMessage}>Send</button>
-            <button onClick={onClear}>Clear</button>
         </div>
     );
 }
