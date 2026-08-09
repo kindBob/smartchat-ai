@@ -48,13 +48,15 @@ function Home() {
     const [activeChatId, setActiveChatId] = useState<string>(() => {
         const storedActiveChatId = localStorage.getItem(ACTIVE_CHAT_STORAGE_KEY);
 
-        return storedActiveChatId ?? initialChats[0].id;
+        return storedActiveChatId ?? chats[0].id;
     });
 
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
 
     useEffect(() => {
-        localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(chats));
+        const modifiedChats = chats.map(({ isTyping, isResponseLoading, ...chat }) => chat);
+
+        localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(modifiedChats));
     }, [chats]);
 
     useEffect(() => {
@@ -184,8 +186,33 @@ function Home() {
         }
     }
 
+    async function generateTitle(message: string) {
+        try {
+            const request = await fetch("http://localhost:3000/chat-title", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ message }),
+            });
+
+            const data = await request.json();
+            const newTitle = data.response;
+
+            setChats((prev) => prev.map((chat) => (chat.id === activeChatId ? { ...chat, title: newTitle } : chat)));
+        } catch (error) {
+            console.log("Error generating title: " + error);
+        }
+    }
+
     function sendMessage(userMessage: string) {
         const newMessage = createMessage(userMessage, "user");
+
+        const activeChat = chats.find((chat) => chat.id === activeChatId);
+
+        if (activeChat?.title === "New Chat") {
+            generateTitle(userMessage);
+        }
 
         setChats((prevChats) =>
             prevChats.map((chat) => {

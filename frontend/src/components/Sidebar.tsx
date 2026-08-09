@@ -15,7 +15,7 @@ function Sidebar({ chats, activeChatId, onSelectChat, onNewChat }: SidebarProps)
 
             {chats.map((chat) => (
                 <div
-                    className={"sidebar__chat " + (chat.id === activeChatId ? "active" : "")}
+                    className={"sidebar__chat" + (chat.id === activeChatId ? " active" : "")}
                     key={chat.id}
                     onClick={() => onSelectChat(chat.id)}>
                     {chat.title}

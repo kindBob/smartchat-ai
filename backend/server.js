@@ -26,6 +26,19 @@ app.post("/chat", async (req, res) => {
     });
 });
 
+app.post("/chat-title", async (req, res) => {
+    const { message } = req.body;
+
+    const aiResponse = await ai.interactions.create({
+        model: "gemini-3.5-flash-lite",
+        input: "Make a title from this message, only one title, no more messages, Short & direct " + message,
+    });
+
+    res.json({
+        response: aiResponse.output_text,
+    });
+});
+
 app.get("/chat", (req, res) => {
     res.json({
         response: "Hello from the backend!",
