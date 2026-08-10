@@ -137,7 +137,7 @@ function Home() {
 
                 setChats((prevChats) =>
                     prevChats.map((chat) => {
-                        if (chat.id !== activeChatId) return chat;
+                        if (chat.id !== currentChatId) return chat;
 
                         return {
                             ...chat,
@@ -207,8 +207,6 @@ function Home() {
 
     function sendMessage(userMessage: string) {
         const newMessage = createMessage(userMessage, "user");
-
-        const activeChat = chats.find((chat) => chat.id === activeChatId);
 
         if (activeChat?.title === "New Chat") {
             generateTitle(userMessage);
