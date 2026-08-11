@@ -104,6 +104,10 @@ function Home() {
         }
     }
 
+    function renameChat(id: string, newTitle: string) {
+        setChats((prev) => prev.map((chat) => (chat.id === id ? { ...chat, title: newTitle } : chat)));
+    }
+
     function selectChat(id: string) {
         setActiveChatId(id);
     }
@@ -263,6 +267,7 @@ function Home() {
                 onSelectChat={selectChat}
                 activeChatId={activeChatId}
                 onDeleteChat={deleteChat}
+                onRenameChat={renameChat}
             />
             <Chat chat={activeChat} onSend={sendMessage} />
         </main>

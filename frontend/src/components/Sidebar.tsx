@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ChatType } from "../types/Chat";
 import "./Sidebar.scss";
 
@@ -7,9 +8,13 @@ type SidebarProps = {
     onSelectChat: (id: string) => void;
     onNewChat: () => void;
     onDeleteChat: (id: string) => void;
+    onRenameChat: (id: string, newTitle: string) => void;
 };
 
-function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat }: SidebarProps) {
+function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat, onRenameChat }: SidebarProps) {
+    const [renamingChatId, setRenamingChatId] = useState<string | null>(null);
+    const [renamingChatValue, setRenamingChatValue] = useState("");
+
     return (
         <aside className="sidebar">
             <button onClick={onNewChat}>+ New Chat</button>
@@ -19,13 +24,38 @@ function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat }:
                     className={"sidebar__chat" + (chat.id === activeChatId ? " active" : "")}
                     key={chat.id}
                     onClick={() => onSelectChat(chat.id)}>
-                    {chat.title}
+                    {renamingChatId === chat.id ? (
+                        <input
+                            value={renamingChatValue}
+                            onChange={(e) => setRenamingChatValue(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    if (renamingChatValue.trim() !== "")
+                                        onRenameChat(chat.id, renamingChatValue.trim());
+
+                                    setRenamingChatId(null);
+                                } else if (e.key === "Escape") {
+                                    setRenamingChatId(null);
+                                }
+                            }}
+                        />
+                    ) : (
+                        chat.title
+                    )}
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onDeleteChat(chat.id);
                         }}>
                         Delete chat
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setRenamingChatId(chat.id);
+                            setRenamingChatValue(chat.title);
+                        }}>
+                        Rename
                     </button>
                 </div>
             ))}
