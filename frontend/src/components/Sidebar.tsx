@@ -6,9 +6,10 @@ type SidebarProps = {
     activeChatId: string | null;
     onSelectChat: (id: string) => void;
     onNewChat: () => void;
+    onDeleteChat: (id: string) => void;
 };
 
-function Sidebar({ chats, activeChatId, onSelectChat, onNewChat }: SidebarProps) {
+function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat }: SidebarProps) {
     return (
         <aside className="sidebar">
             <button onClick={onNewChat}>+ New Chat</button>
@@ -19,6 +20,13 @@ function Sidebar({ chats, activeChatId, onSelectChat, onNewChat }: SidebarProps)
                     key={chat.id}
                     onClick={() => onSelectChat(chat.id)}>
                     {chat.title}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteChat(chat.id);
+                        }}>
+                        Delete chat
+                    </button>
                 </div>
             ))}
         </aside>

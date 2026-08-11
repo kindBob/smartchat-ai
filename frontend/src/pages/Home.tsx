@@ -45,10 +45,14 @@ function Home() {
 
         return initialChats;
     });
-    const [activeChatId, setActiveChatId] = useState<string>(() => {
+    const [activeChatId, setActiveChatId] = useState(() => {
         const storedActiveChatId = localStorage.getItem(ACTIVE_CHAT_STORAGE_KEY);
 
-        return storedActiveChatId ?? chats[0].id;
+        if (storedActiveChatId && chats.some((chat) => chat.id === storedActiveChatId)) {
+            return storedActiveChatId;
+        }
+
+        return chats[0].id;
     });
 
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
@@ -83,6 +87,21 @@ function Home() {
 
         setChats((prev) => [newChat, ...prev]);
         setActiveChatId(newChat.id);
+    }
+
+    function deleteChat(id: string) {
+        const newChats = chats.filter((chat) => chat.id !== id);
+
+        if (newChats.length === 0) {
+            createNewChat();
+            return;
+        }
+
+        setChats(newChats);
+
+        if (id === activeChatId) {
+            setActiveChatId(newChats[newChats.length - 1].id);
+        }
     }
 
     function selectChat(id: string) {
@@ -241,8 +260,9 @@ function Home() {
             <Sidebar
                 chats={chats}
                 onNewChat={createNewChat}
-                onSelectChat={(id) => selectChat(id)}
+                onSelectChat={selectChat}
                 activeChatId={activeChatId}
+                onDeleteChat={deleteChat}
             />
             <Chat chat={activeChat} onSend={sendMessage} />
         </main>
