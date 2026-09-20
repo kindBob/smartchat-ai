@@ -28,6 +28,7 @@ function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat, o
                         <input
                             value={renamingChatValue}
                             onChange={(e) => setRenamingChatValue(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
                                     if (renamingChatValue.trim() !== "")
@@ -40,23 +41,27 @@ function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat, o
                             }}
                         />
                     ) : (
-                        chat.title
+                        <span>{chat.title}</span>
                     )}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteChat(chat.id);
-                        }}>
-                        Delete chat
-                    </button>
 
-                    <button
-                        onClick={() => {
-                            setRenamingChatId(chat.id);
-                            setRenamingChatValue(chat.title);
-                        }}>
-                        Rename
-                    </button>
+                    <div className="sidebar__chat-actions">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteChat(chat.id);
+                            }}>
+                            Delete chat
+                        </button>
+
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setRenamingChatId(chat.id);
+                                setRenamingChatValue(chat.title);
+                            }}>
+                            Rename
+                        </button>
+                    </div>
                 </div>
             ))}
         </aside>

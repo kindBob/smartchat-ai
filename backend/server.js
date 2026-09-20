@@ -14,29 +14,65 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/chat", async (req, res) => {
-    const { messages } = req.body;
+    try {
+        const { messages } = req.body;
 
-    const aiResponse = await ai.models.generateContent({
-        model: "gemini-3.5-flash-lite",
-        contents: messages,
-    });
+        if (!messages || !Array.isArray(messages)) {
+            return res.status(400).json({
+                error: "Messages must be an array",
+            });
+        }
 
-    res.json({
-        response: aiResponse.text,
-    });
+        const aiResponse = await ai.models.generateContent({
+            model: "gemini-3.5-flash-lite",
+            contents: messages,
+        });
+
+        res.json({
+            response: aiResponse.text.trim(),
+        });
+    } catch (error) {
+        console.error("Response generation error" + error);
+
+        res.status(500).json({
+            error: "Failed to generate AI response",
+        });
+    }
 });
 
 app.post("/chat-title", async (req, res) => {
-    const { message } = req.body;
+    try {
+        const { message } = req.body;
 
-    const aiResponse = await ai.interactions.create({
-        model: "gemini-3.5-flash-lite",
-        input: "Make a title from this message, only one title, no more messages, Short & direct " + message,
-    });
+        if (!message || typeof message !== "string") {
+            return res.status(400).json({
+                error: "Message is required",
+            });
+        }
 
-    res.json({
-        response: aiResponse.output_text,
-    });
+        const aiResponse = await ai.interactions.create({
+            model: "gemini-3.5-flash-lite",
+            input: `Generate a short title for this message.
+            Rules: 
+            - Return only the title
+            - No quotation marks
+            - Max 5 words
+            - Keep it concise
+
+            Message: 
+            ${message}`,
+        });
+
+        res.json({
+            response: aiResponse.output_text.trim(),
+        });
+    } catch (error) {
+        console.error("Title generation error" + error);
+
+        res.status(500).json({
+            error: "Failed to generate chat title",
+        });
+    }
 });
 
 app.get("/chat", (req, res) => {

@@ -91,13 +91,12 @@ function Home() {
 
     function deleteChat(id: string) {
         const newChats = chats.filter((chat) => chat.id !== id);
+        setChats(newChats);
 
         if (newChats.length === 0) {
             createNewChat();
             return;
         }
-
-        setChats(newChats);
 
         if (id === activeChatId) {
             setActiveChatId(newChats[newChats.length - 1].id);
