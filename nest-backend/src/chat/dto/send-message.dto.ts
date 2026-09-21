@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsString, ValidateNested } from "class-validator";
+import { IsArray, IsIn, IsNotEmpty, IsString, ValidateNested } from "class-validator";
 
 class PartDto {
     @IsString()
@@ -10,7 +10,8 @@ class PartDto {
 export class MessageDto {
     @IsString()
     @IsNotEmpty()
-    role: string;
+    @IsIn(["user", "model"])
+    role: "user" | "model";
 
     @IsArray()
     @ValidateNested({ each: true })

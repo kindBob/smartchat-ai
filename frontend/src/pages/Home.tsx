@@ -135,6 +135,11 @@ function Home() {
             });
 
             const data = await request.json();
+
+            if (!request.ok) {
+                throw new Error(data.message || "Failed to generate AI response");
+            }
+
             const aiResponse = data.response;
 
             const assistantMessage = createMessage("", "assistant");
@@ -193,7 +198,7 @@ function Home() {
                 }
             }, 30);
         } catch (error) {
-            console.log("Error generating assistant message:", error);
+            console.error("Error generating assistant message:", error);
             setChats((prevChats) =>
                 prevChats.map((chat) => {
                     if (chat.id !== currentChatId) return chat;
@@ -246,14 +251,16 @@ function Home() {
             })
         );
 
-        const conversation: ConversationType[] = [...activeChat.messages, newMessage].map((message) => ({
-            role: message.sender === "assistant" ? "model" : "user",
-            parts: [
-                {
-                    text: message.text,
-                },
-            ],
-        }));
+        const conversation: ConversationType[] = [...activeChat.messages, newMessage]
+            .filter((message) => message.text.trim() !== "")
+            .map((message) => ({
+                role: message.sender === "assistant" ? "model" : "user",
+                parts: [
+                    {
+                        text: message.text,
+                    },
+                ],
+            }));
 
         generateAssistantResponse(conversation);
     }

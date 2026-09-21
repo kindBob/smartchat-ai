@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
@@ -14,12 +14,18 @@ export class ChatService {
     }
 
     async generateResponse(messages: MessageDto[]) {
-        const aiResponse = await this.ai.models.generateContent({
-            model: "gemini-3.5-flash-lite",
-            contents: messages,
-        });
+        try {
+            const aiResponse = await this.ai.models.generateContent({
+                model: "gemini-3.5-flash-lite",
+                contents: messages,
+            });
 
-        return aiResponse.text?.trim();
+            return aiResponse.text?.trim();
+        } catch (error) {
+            console.error("Gemini API error: ", error);
+
+            throw new InternalServerErrorException("Failed to generate AI response");
+        }
     }
 
     async generateTitle(message: string) {
