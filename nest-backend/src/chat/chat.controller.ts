@@ -1,6 +1,7 @@
 import { Body, Controller, Post, BadRequestException, Get } from "@nestjs/common";
 import { ChatService } from "./chat.service.js";
-import { GenerateTitleDto } from "./dto/generate-title.dto/generate-title.dto.js";
+import { GenerateTitleDto } from "./dto/generate-title.dto.js";
+import { SendMessageDto } from "./dto/send-message.dto.js";
 
 @Controller("chat")
 export class ChatController {
@@ -12,6 +13,15 @@ export class ChatController {
 
         return {
             response: title,
+        };
+    }
+
+    @Post()
+    async generateResponse(@Body() dto: SendMessageDto) {
+        const response = await this.chatService.generateResponse(dto.messages);
+
+        return {
+            response,
         };
     }
 }

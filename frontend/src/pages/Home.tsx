@@ -124,7 +124,7 @@ function Home() {
         const currentChatId = activeChatId;
 
         try {
-            const request = await fetch("http://localhost:3000/chat", {
+            const request = await fetch("http://localhost:3001/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -210,7 +210,7 @@ function Home() {
 
     async function generateTitle(message: string) {
         try {
-            const request = await fetch("http://localhost:3000/chat-title", {
+            const request = await fetch("http://localhost:3001/chat/title", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

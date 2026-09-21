@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
+import { MessageDto } from "./dto/send-message.dto.js";
 
 @Injectable()
 export class ChatService {
@@ -10,6 +11,15 @@ export class ChatService {
         this.ai = new GoogleGenAI({
             apiKey: this.configService.get<string>("GEMINI_API_KEY"),
         });
+    }
+
+    async generateResponse(messages: MessageDto[]) {
+        const aiResponse = await this.ai.models.generateContent({
+            model: "gemini-3.5-flash-lite",
+            contents: messages,
+        });
+
+        return aiResponse.text?.trim();
     }
 
     async generateTitle(message: string) {
