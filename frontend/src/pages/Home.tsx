@@ -98,7 +98,7 @@ function Home() {
             id: crypto.randomUUID(),
             text,
             sender,
-            timestamp: new Date(),
+            timestamp: new Date().toISOString(),
         };
     }
 

@@ -1,10 +1,20 @@
 import type { MessageType } from "../types/Message";
 
-function Message({ id, text, sender, timestamp }: MessageType) {
+const timeFormatter = new Intl.DateTimeFormat([], {
+    hour: "2-digit",
+    minute: "2-digit",
+});
+
+function formatMessageTime(timestamp: string) {
+    return timeFormatter.format(new Date(timestamp));
+}
+
+function Message({ text, sender, timestamp }: MessageType) {
     return (
-        <div>
-            <strong>{sender === "user" ? "You: " : "AI: "}</strong>
-            <span>{text}</span>
+        <div className={`message ${sender === "user" ? "message--user" : "message--assistant"}`}>
+            <p className="message__text">{text}</p>
+
+            <span className="message__time">{formatMessageTime(timestamp)}</span>
         </div>
     );
 }

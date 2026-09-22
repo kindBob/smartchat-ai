@@ -2,5 +2,5 @@ export type MessageType = {
     id: string;
     text: string;
     sender: "user" | "assistant";
-    timestamp?: Date;
+    timestamp: string;
 };
