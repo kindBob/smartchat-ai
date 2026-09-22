@@ -19,31 +19,20 @@ type ConversationType = {
 };
 
 function Home() {
-    const initialChats: ChatType[] = [
-        {
-            id: crypto.randomUUID(),
-            title: "React Questions",
-            messages: [createInitialMessage()],
-            isTyping: false,
-            isResponseLoading: false,
-        },
-        {
-            id: crypto.randomUUID(),
-            title: "Workout",
-            messages: [createInitialMessage()],
-            isTyping: false,
-            isResponseLoading: false,
-        },
-    ];
-
     const [chats, setChats] = useState<ChatType[]>(() => {
         const storedChats = localStorage.getItem(CHATS_STORAGE_KEY);
 
-        if (storedChats) {
-            return JSON.parse(storedChats);
-        }
+        if (!storedChats) return [createNewChat()];
 
-        return initialChats;
+        try {
+            const parsedChats = JSON.parse(storedChats);
+
+            if (parsedChats.length === 0) return [createNewChat()];
+
+            return parsedChats;
+        } catch {
+            return createNewChat();
+        }
     });
     const [activeChatId, setActiveChatId] = useState(() => {
         const storedActiveChatId = localStorage.getItem(ACTIVE_CHAT_STORAGE_KEY);
@@ -67,26 +56,14 @@ function Home() {
         localStorage.setItem(ACTIVE_CHAT_STORAGE_KEY, activeChatId);
     }, [activeChatId]);
 
-    function createInitialMessage(): MessageType {
+    function createNewChat(): ChatType {
         return {
             id: crypto.randomUUID(),
-            text: "Hello! How can I help you today?",
-            sender: "assistant",
-            timestamp: new Date(),
-        };
-    }
-
-    function createNewChat() {
-        const newChat: ChatType = {
-            id: crypto.randomUUID(),
             title: "New Chat",
-            messages: [createInitialMessage()],
+            messages: [createMessage("Hello! How can I help you today?", "assistant")],
             isTyping: false,
             isResponseLoading: false,
         };
-
-        setChats((prev) => [newChat, ...prev]);
-        setActiveChatId(newChat.id);
     }
 
     function deleteChat(id: string) {
@@ -94,7 +71,9 @@ function Home() {
         setChats(newChats);
 
         if (newChats.length === 0) {
-            createNewChat();
+            const newChat = createNewChat();
+            setChats((prev) => [newChat, ...prev]);
+            setActiveChatId(newChat.id);
             return;
         }
 
@@ -160,6 +139,21 @@ function Home() {
             let index = 0;
 
             const interval = setInterval(() => {
+                if (index >= aiResponse.length - 1) {
+                    clearInterval(interval);
+
+                    setChats((prevChats) =>
+                        prevChats.map((chat) => {
+                            if (chat.id !== currentChatId) return chat;
+
+                            return {
+                                ...chat,
+                                isTyping: false,
+                            };
+                        })
+                    );
+                }
+
                 const currentChar = aiResponse[index];
 
                 setChats((prevChats) =>
@@ -181,21 +175,6 @@ function Home() {
                 );
 
                 index++;
-
-                if (index >= aiResponse.length) {
-                    clearInterval(interval);
-
-                    setChats((prevChats) =>
-                        prevChats.map((chat) => {
-                            if (chat.id !== currentChatId) return chat;
-
-                            return {
-                                ...chat,
-                                isTyping: false,
-                            };
-                        })
-                    );
-                }
             }, 30);
         } catch (error) {
             console.error("Error generating assistant message:", error);
@@ -239,6 +218,8 @@ function Home() {
             generateTitle(userMessage);
         }
 
+        const updatedMessages = [...activeChat.messages, newMessage];
+
         setChats((prevChats) =>
             prevChats.map((chat) => {
                 if (chat.id !== activeChatId) return chat;
@@ -246,12 +227,12 @@ function Home() {
                 return {
                     ...chat,
                     isResponseLoading: true,
-                    messages: [...chat.messages, newMessage],
+                    messages: updatedMessages,
                 };
             })
         );
 
-        const conversation: ConversationType[] = [...activeChat.messages, newMessage]
+        const conversation: ConversationType[] = updatedMessages
             .filter((message) => message.text.trim() !== "")
             .map((message) => ({
                 role: message.sender === "assistant" ? "model" : "user",
@@ -265,11 +246,18 @@ function Home() {
         generateAssistantResponse(conversation);
     }
 
+    function handleNewChat() {
+        const newChat = createNewChat();
+
+        setChats((prev) => [newChat, ...prev]);
+        setActiveChatId(newChat.id);
+    }
+
     return (
         <main className="home">
             <Sidebar
                 chats={chats}
-                onNewChat={createNewChat}
+                onNewChat={handleNewChat}
                 onSelectChat={selectChat}
                 activeChatId={activeChatId}
                 onDeleteChat={deleteChat}
