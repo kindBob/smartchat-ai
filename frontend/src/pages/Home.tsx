@@ -31,10 +31,10 @@ function Home() {
 
             return parsedChats;
         } catch {
-            return createNewChat();
+            return [createNewChat()];
         }
     });
-    const [activeChatId, setActiveChatId] = useState(() => {
+    const [activeChatId, setActiveChatId] = useState<string>(() => {
         const storedActiveChatId = localStorage.getItem(ACTIVE_CHAT_STORAGE_KEY);
 
         if (storedActiveChatId && chats.some((chat) => chat.id === storedActiveChatId)) {
@@ -68,14 +68,17 @@ function Home() {
 
     function deleteChat(id: string) {
         const newChats = chats.filter((chat) => chat.id !== id);
-        setChats(newChats);
 
         if (newChats.length === 0) {
             const newChat = createNewChat();
-            setChats((prev) => [newChat, ...prev]);
+
+            setChats([newChat]);
             setActiveChatId(newChat.id);
+
             return;
         }
+
+        setChats(newChats);
 
         if (id === activeChatId) {
             setActiveChatId(newChats[newChats.length - 1].id);
@@ -139,7 +142,7 @@ function Home() {
             let index = 0;
 
             const interval = setInterval(() => {
-                if (index >= aiResponse.length - 1) {
+                if (index >= aiResponse.length) {
                     clearInterval(interval);
 
                     setChats((prevChats) =>
@@ -152,6 +155,8 @@ function Home() {
                             };
                         })
                     );
+
+                    return;
                 }
 
                 const currentChar = aiResponse[index];
@@ -193,6 +198,8 @@ function Home() {
     }
 
     async function generateTitle(message: string) {
+        const currentChatId = activeChatId;
+
         try {
             const request = await fetch("http://localhost:3001/chat/title", {
                 method: "POST",
@@ -203,9 +210,14 @@ function Home() {
             });
 
             const data = await request.json();
+
+            if (!request.ok) {
+                throw new Error(data.message || "Failed to generate chat title");
+            }
+
             const newTitle = data.response;
 
-            setChats((prev) => prev.map((chat) => (chat.id === activeChatId ? { ...chat, title: newTitle } : chat)));
+            setChats((prev) => prev.map((chat) => (chat.id === currentChatId ? { ...chat, title: newTitle } : chat)));
         } catch (error) {
             console.log("Error generating title: " + error);
         }

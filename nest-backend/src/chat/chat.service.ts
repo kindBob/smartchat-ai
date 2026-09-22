@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
@@ -29,19 +29,31 @@ export class ChatService {
     }
 
     async generateTitle(message: string) {
-        const aiResponse = await this.ai.interactions.create({
-            model: "gemini-3.5-flash-lite",
-            input: `Generate a short title for this message.
-        Rules: 
-        - Return only the title
-        - No quotation marks
-        - Max 5 words
-        - Keep it concise
+        try {
+            const aiResponse = await this.ai.interactions.create({
+                model: "gemini-3.5-flash-lite",
+                input: `Generate a short title for this message.
+            Rules: 
+            - Return only the title
+            - No quotation marks
+            - Max 5 words
+            - Keep it concise
+    
+            Message: 
+            ${message}`,
+            });
 
-        Message: 
-        ${message}`,
-        });
+            const title = aiResponse.output_text?.trim();
 
-        return aiResponse.output_text?.trim();
+            if (!title) {
+                throw new Error("Empty title returned");
+            }
+
+            return title;
+        } catch (error) {
+            console.error("Gemini API error: ", error);
+
+            throw new InternalServerErrorException("Failed to generate title");
+        }
     }
 }
