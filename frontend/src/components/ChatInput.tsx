@@ -1,16 +1,18 @@
 import { useState } from "react";
-import "./ChatInput.scss";
+import StopIcon from "../assets/icons/StopIcon";
+import SendIcon from "../assets/icons/SendIcon";
 
 type ChatInputProps = {
     onSend: (text: string) => void;
-    isTyping: boolean;
+    onStop: () => void;
+    isGenerating: boolean;
 };
 
-function ChatInput({ onSend, isTyping }: ChatInputProps) {
+function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
     const [value, setValue] = useState("");
 
     function sendMessage() {
-        if (!value) return;
+        if (!value.trim() || isGenerating) return;
 
         onSend(value);
         setValue("");
@@ -18,9 +20,10 @@ function ChatInput({ onSend, isTyping }: ChatInputProps) {
 
     return (
         <div className="chat-input">
-            <input
+            <textarea
                 value={value}
-                disabled={isTyping}
+                disabled={isGenerating}
+                placeholder={isGenerating ? "AI is typing..." : "Message SmartChat AI..."}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -29,7 +32,20 @@ function ChatInput({ onSend, isTyping }: ChatInputProps) {
                     }
                 }}
             />
-            <button onClick={sendMessage}>Send</button>
+            <button
+                onClick={() => {
+                    if (isGenerating) {
+                        console.log("is generating");
+                        onStop();
+                        return;
+                    }
+
+                    sendMessage();
+                }}
+                disabled={!isGenerating && !value.trim()}
+                aria-label={isGenerating ? "Stop generating" : "Send message"}>
+                {isGenerating ? <StopIcon /> : <SendIcon />}
+            </button>
         </div>
     );
 }

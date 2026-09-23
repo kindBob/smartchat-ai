@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar";
 import type { MessageType } from "../types/Message";
@@ -43,6 +43,9 @@ function Home() {
 
         return chats[0].id;
     });
+
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
 
@@ -105,12 +108,16 @@ function Home() {
     async function generateAssistantResponse(conversation: ConversationType[]) {
         const currentChatId = activeChatId;
 
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         try {
             const request = await fetch("http://localhost:3001/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
+                signal: controller.signal,
                 body: JSON.stringify({
                     messages: conversation,
                 }),
@@ -141,9 +148,12 @@ function Home() {
 
             let index = 0;
 
-            const interval = setInterval(() => {
+            typingIntervalRef.current = setInterval(() => {
                 if (index >= aiResponse.length) {
-                    clearInterval(interval);
+                    if (typingIntervalRef.current) {
+                        clearInterval(typingIntervalRef.current);
+                        typingIntervalRef.current = null;
+                    }
 
                     setChats((prevChats) =>
                         prevChats.map((chat) => {
@@ -182,7 +192,10 @@ function Home() {
                 index++;
             }, 30);
         } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
+
             console.error("Error generating assistant message:", error);
+
             setChats((prevChats) =>
                 prevChats.map((chat) => {
                     if (chat.id !== currentChatId) return chat;
@@ -194,6 +207,8 @@ function Home() {
                     };
                 })
             );
+        } finally {
+            if (abortControllerRef.current === controller) abortControllerRef.current = null;
         }
     }
 
@@ -221,6 +236,26 @@ function Home() {
         } catch (error) {
             console.log("Error generating title: " + error);
         }
+    }
+
+    function stopTyping() {
+        abortControllerRef.current?.abort();
+
+        if (typingIntervalRef.current) {
+            clearInterval(typingIntervalRef.current);
+            typingIntervalRef.current = null;
+        }
+
+        setChats((prevChats) =>
+            prevChats.map((chat) => {
+                if (chat.id !== activeChatId) return chat;
+                return {
+                    ...chat,
+                    isTyping: false,
+                    isResponseLoading: false,
+                };
+            })
+        );
     }
 
     function sendMessage(userMessage: string) {
@@ -275,7 +310,7 @@ function Home() {
                 onDeleteChat={deleteChat}
                 onRenameChat={renameChat}
             />
-            <Chat chat={activeChat} onSend={sendMessage} />
+            <Chat chat={activeChat} onSend={sendMessage} onStop={stopTyping} />
         </main>
     );
 }

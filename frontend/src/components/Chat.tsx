@@ -6,13 +6,14 @@ import "./Chat.scss";
 type ChatProps = {
     chat: ChatType | undefined;
     onSend: (userMessage: string) => void;
+    onStop: () => void;
 };
 
-function Chat({ chat, onSend }: ChatProps) {
+function Chat({ chat, onSend, onStop }: ChatProps) {
     return (
         <div className="chat">
             <MessageList messages={chat?.messages ?? []} isResponseLoading={chat.isResponseLoading} />
-            <ChatInput onSend={onSend} isTyping={chat.isTyping} />
+            <ChatInput onSend={onSend} onStop={onStop} isGenerating={chat.isResponseLoading || chat.isTyping} />
         </div>
     );
 }
