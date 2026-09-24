@@ -1,4 +1,9 @@
-import type { MessageType } from "./Message";
+export type MessageType = {
+    id: string;
+    text: string;
+    sender: "user" | "assistant";
+    timestamp: string;
+};
 
 export type ChatType = {
     id: string;

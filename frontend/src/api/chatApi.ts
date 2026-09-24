@@ -1,7 +1,19 @@
-import type { ConversationType } from "../types/Chat";
+import type { ConversationType } from "../types/Api";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+async function handleResponse<T>(request: Response): Promise<T> {
+    const data = await request.json();
+
+    if (!request.ok) {
+        throw new Error(data.message || "Failed to generate chat title");
+    }
+
+    return data;
+}
 
 export async function fetchChatTitle(message: string) {
-    const request = await fetch("http://localhost:3001/chat/title", {
+    const request = await fetch(`${API_URL}/chat/title`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -9,11 +21,7 @@ export async function fetchChatTitle(message: string) {
         body: JSON.stringify({ message }),
     });
 
-    const data = await request.json();
-
-    if (!request.ok) {
-        throw new Error(data.message || "Failed to generate chat title");
-    }
+    const data = await handleResponse<{ response: string }>(request);
 
     return data.response;
 }
@@ -22,7 +30,7 @@ export async function fetchAssistantResponse(
     conversation: ConversationType[],
     controller: AbortController
 ): Promise<string> {
-    const request = await fetch("http://localhost:3001/chat", {
+    const request = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -33,11 +41,7 @@ export async function fetchAssistantResponse(
         }),
     });
 
-    const data = await request.json();
-
-    if (!request.ok) {
-        throw new Error(data.message || "Failed to generate AI response");
-    }
+    const data = await handleResponse<{ response: string }>(request);
 
     return data.response;
 }

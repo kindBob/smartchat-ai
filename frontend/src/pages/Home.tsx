@@ -1,41 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar";
-import type { MessageType } from "../types/Message";
-import type { ChatType } from "../types/Chat";
+import type { ChatType, MessageType } from "../types/Chat";
 
 import "./Home.scss";
-
-const CHATS_STORAGE_KEY = "smartchat-chats";
-const ACTIVE_CHAT_STORAGE_KEY = "smartchat-active-chat";
-
-type ConversationType = {
-    parts: [
-        {
-            text: string;
-        }
-    ];
-    role: "user" | "model";
-};
+import type { ConversationType } from "../types/Api";
+import { loadActiveChatId, loadChats, saveActiveChatId, saveChats } from "../utils/chatStorage";
+import { fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
+import { createConversation } from "../utils/conversation";
 
 function Home() {
     const [chats, setChats] = useState<ChatType[]>(() => {
-        const storedChats = localStorage.getItem(CHATS_STORAGE_KEY);
+        const storedChats = loadChats();
 
-        if (!storedChats) return [createNewChat()];
+        if (!storedChats || storedChats.length === 0) return [createNewChat()];
 
-        try {
-            const parsedChats = JSON.parse(storedChats);
-
-            if (parsedChats.length === 0) return [createNewChat()];
-
-            return parsedChats;
-        } catch {
-            return [createNewChat()];
-        }
+        return storedChats;
     });
     const [activeChatId, setActiveChatId] = useState<string>(() => {
-        const storedActiveChatId = localStorage.getItem(ACTIVE_CHAT_STORAGE_KEY);
+        const storedActiveChatId = loadActiveChatId();
 
         if (storedActiveChatId && chats.some((chat) => chat.id === storedActiveChatId)) {
             return storedActiveChatId;
@@ -50,14 +33,23 @@ function Home() {
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
 
     useEffect(() => {
-        const modifiedChats = chats.map(({ isTyping, isResponseLoading, ...chat }) => chat);
-
-        localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(modifiedChats));
+        saveChats(chats);
     }, [chats]);
 
     useEffect(() => {
-        localStorage.setItem(ACTIVE_CHAT_STORAGE_KEY, activeChatId);
+        saveActiveChatId(activeChatId);
     }, [activeChatId]);
+
+    useEffect(() => {
+        return () => {
+            if (typingIntervalRef.current) {
+                clearInterval(typingIntervalRef.current);
+                typingIntervalRef.current = null;
+            }
+
+            abortControllerRef.current?.abort();
+        };
+    }, []);
 
     function createNewChat(): ChatType {
         return {
@@ -112,24 +104,7 @@ function Home() {
         abortControllerRef.current = controller;
 
         try {
-            const request = await fetch("http://localhost:3001/chat", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                signal: controller.signal,
-                body: JSON.stringify({
-                    messages: conversation,
-                }),
-            });
-
-            const data = await request.json();
-
-            if (!request.ok) {
-                throw new Error(data.message || "Failed to generate AI response");
-            }
-
-            const aiResponse = data.response;
+            const aiResponse = await fetchAssistantResponse(conversation, controller);
 
             const assistantMessage = createMessage("", "assistant");
 
@@ -146,51 +121,7 @@ function Home() {
                 })
             );
 
-            let index = 0;
-
-            typingIntervalRef.current = setInterval(() => {
-                if (index >= aiResponse.length) {
-                    if (typingIntervalRef.current) {
-                        clearInterval(typingIntervalRef.current);
-                        typingIntervalRef.current = null;
-                    }
-
-                    setChats((prevChats) =>
-                        prevChats.map((chat) => {
-                            if (chat.id !== currentChatId) return chat;
-
-                            return {
-                                ...chat,
-                                isTyping: false,
-                            };
-                        })
-                    );
-
-                    return;
-                }
-
-                const currentChar = aiResponse[index];
-
-                setChats((prevChats) =>
-                    prevChats.map((chat) => {
-                        if (chat.id !== currentChatId) return chat;
-
-                        return {
-                            ...chat,
-                            messages: chat.messages.map((message) => {
-                                if (message.id !== assistantMessage.id) return message;
-
-                                return {
-                                    ...message,
-                                    text: message.text + currentChar,
-                                };
-                            }),
-                        };
-                    })
-                );
-
-                index++;
-            }, 30);
+            startTypingAnimation(assistantMessage, aiResponse, currentChatId);
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") return;
 
@@ -212,25 +143,59 @@ function Home() {
         }
     }
 
+    function startTypingAnimation(assistantMessage: MessageType, aiResponse: string, currentChatId: string) {
+        let index = 0;
+
+        typingIntervalRef.current = setInterval(() => {
+            if (index >= aiResponse.length) {
+                if (typingIntervalRef.current) {
+                    clearInterval(typingIntervalRef.current);
+                    typingIntervalRef.current = null;
+                }
+
+                setChats((prevChats) =>
+                    prevChats.map((chat) => {
+                        if (chat.id !== currentChatId) return chat;
+
+                        return {
+                            ...chat,
+                            isTyping: false,
+                        };
+                    })
+                );
+
+                return;
+            }
+
+            const currentChar = aiResponse[index];
+
+            setChats((prevChats) =>
+                prevChats.map((chat) => {
+                    if (chat.id !== currentChatId) return chat;
+
+                    return {
+                        ...chat,
+                        messages: chat.messages.map((message) => {
+                            if (message.id !== assistantMessage.id) return message;
+
+                            return {
+                                ...message,
+                                text: message.text + currentChar,
+                            };
+                        }),
+                    };
+                })
+            );
+
+            index++;
+        }, 30);
+    }
+
     async function generateTitle(message: string) {
         const currentChatId = activeChatId;
 
         try {
-            const request = await fetch("http://localhost:3001/chat/title", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message }),
-            });
-
-            const data = await request.json();
-
-            if (!request.ok) {
-                throw new Error(data.message || "Failed to generate chat title");
-            }
-
-            const newTitle = data.response;
+            const newTitle = await fetchChatTitle(message);
 
             setChats((prev) => prev.map((chat) => (chat.id === currentChatId ? { ...chat, title: newTitle } : chat)));
         } catch (error) {
@@ -279,16 +244,7 @@ function Home() {
             })
         );
 
-        const conversation: ConversationType[] = updatedMessages
-            .filter((message) => message.text.trim() !== "")
-            .map((message) => ({
-                role: message.sender === "assistant" ? "model" : "user",
-                parts: [
-                    {
-                        text: message.text,
-                    },
-                ],
-            }));
+        const conversation = createConversation(updatedMessages);
 
         generateAssistantResponse(conversation);
     }
