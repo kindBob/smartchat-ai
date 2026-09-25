@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
-import type { MessageType } from "../types/Message";
+import type { MessageType } from "../types/Chat";
 import Message from "./Message";
 import LoadingResponseIndicator from "./LoadingResponseIndicator";
-import "./MessageList.scss";
 
 type MessageListProps = {
     messages: MessageType[];

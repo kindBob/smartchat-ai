@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Chat from "../components/Chat";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/Sidebar/Sidebar";
 import type { ChatType, MessageType } from "../types/Chat";
 
 import "./Home.scss";

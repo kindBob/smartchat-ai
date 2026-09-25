@@ -129,3 +129,172 @@ $accent-color: #a5b68d;
         }
     }
 }
+
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    margin: 10px 0;
+
+    span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #444;
+        animation: typing 0.7s ease-in-out infinite;
+    }
+
+    span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+}
+
+.message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    width: 100%;
+    height: 100%;
+    padding: 0 15px 90px;
+
+    overflow-y: auto;
+
+    scrollbar-color: rgba(165, 182, 141, 0.4) transparent;
+
+    &::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: red;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(165, 182, 141, 0.4);
+        border-radius: 10px;
+
+        &:hover {
+            background: rgba(165, 182, 141, 0.7);
+        }
+    }
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+
+    width: fit-content;
+    max-width: 75%;
+
+    padding: 11px 15px;
+
+    border-radius: 16px;
+
+    animation: messageAppear 0.2s ease-out;
+
+    &__sender {
+        margin-bottom: 4px;
+
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.65;
+    }
+
+    &__text {
+        margin: 0;
+
+        font-size: 15px;
+        line-height: 1.5;
+
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    &__time {
+        margin-top: 6px;
+
+        font-size: 11px;
+        line-height: 1;
+
+        opacity: 0.45;
+        user-select: none;
+    }
+
+    // User
+    &--user {
+        align-self: flex-end;
+
+        background: #a5b68d;
+        color: #fff;
+
+        border-bottom-right-radius: 5px;
+
+        .message__time {
+            align-self: flex-end;
+        }
+    }
+
+    // AI
+    &--assistant {
+        align-self: flex-start;
+
+        background: #f5f5f2;
+        color: #252525;
+
+        border: 1px solid rgba(0, 0, 0, 0.05);
+
+        border-bottom-left-radius: 5px;
+
+        .message__time {
+            align-self: flex-start;
+        }
+    }
+}
+
+@keyframes messageAppear {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .message {
+        max-width: 85%;
+        padding: 10px 13px;
+
+        &__text {
+            font-size: 14px;
+        }
+
+        &__time {
+            font-size: 10px;
+        }
+    }
+}
+
+@keyframes typing {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateY(-5px);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

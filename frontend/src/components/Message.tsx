@@ -1,4 +1,4 @@
-import type { MessageType } from "../types/Message";
+import type { MessageType } from "../types/Chat";
 
 const timeFormatter = new Intl.DateTimeFormat([], {
     hour: "2-digit",
