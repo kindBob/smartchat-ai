@@ -62,6 +62,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
                         ...chat,
                         isTyping: false,
                         isResponseLoading: false,
+                        error: "Sorry, something went wrong. Please try again.",
                     };
                 })
             );

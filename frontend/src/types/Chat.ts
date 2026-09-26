@@ -11,4 +11,5 @@ export type ChatType = {
     messages: MessageType[];
     isTyping: boolean;
     isResponseLoading: boolean;
+    error?: string;
 };

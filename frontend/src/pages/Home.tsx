@@ -95,6 +95,7 @@ function Home() {
                     ...chat,
                     isResponseLoading: true,
                     messages: updatedMessages,
+                    error: undefined,
                 };
             })
         );

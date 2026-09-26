@@ -12,7 +12,7 @@ type ChatProps = {
 function Chat({ chat, onSend, onStop }: ChatProps) {
     return (
         <div className="chat">
-            <MessageList messages={chat?.messages ?? []} isResponseLoading={chat.isResponseLoading} />
+            <MessageList messages={chat?.messages} isResponseLoading={chat.isResponseLoading} error={chat?.error} />
             <ChatInput onSend={onSend} onStop={onStop} isGenerating={chat.isResponseLoading || chat.isTyping} />
         </div>
     );

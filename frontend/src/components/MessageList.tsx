@@ -6,14 +6,15 @@ import LoadingResponseIndicator from "./LoadingResponseIndicator";
 type MessageListProps = {
     messages: MessageType[];
     isResponseLoading: boolean;
+    error?: string;
 };
 
-function MessageList({ messages, isResponseLoading }: MessageListProps) {
+function MessageList({ messages, isResponseLoading, error }: MessageListProps) {
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, isResponseLoading]);
+    }, [messages, isResponseLoading, error]);
 
     return (
         <div className="message-list">
@@ -22,6 +23,7 @@ function MessageList({ messages, isResponseLoading }: MessageListProps) {
             })}
 
             {isResponseLoading && <LoadingResponseIndicator />}
+            {error && <div className="chat-error">{error}</div>}
             <div ref={bottomRef}></div>
         </div>
     );
