@@ -6,7 +6,7 @@ async function handleResponse<T>(request: Response): Promise<T> {
     const data = await request.json();
 
     if (!request.ok) {
-        throw new Error(data.message || "Failed to generate chat title");
+        throw new Error(data.message || "Request failed");
     }
 
     return data;

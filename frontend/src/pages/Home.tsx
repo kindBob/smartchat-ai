@@ -3,11 +3,10 @@ import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar/Sidebar";
 import type { ChatType } from "../types/Chat";
 import { loadActiveChatId, loadChats, saveActiveChatId, saveChats } from "../utils/chatStorage";
-import { fetchChatTitle } from "../api/chatApi";
 import { createConversation, createMessage } from "../utils/conversation";
 import { SquareMenu } from "lucide-react";
-import "./Home.scss";
 import { useChatGeneration } from "../hooks/useChatGeneration";
+import "./Home.scss";
 
 function Home() {
     const [chats, setChats] = useState<ChatType[]>(() => {

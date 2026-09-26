@@ -146,7 +146,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
 
             setChats((prev) => prev.map((chat) => (chat.id === currentChatId ? { ...chat, title: newTitle } : chat)));
         } catch (error) {
-            console.log("Error generating title: " + error);
+            console.error("Error generating title:", error);
         }
     }
 
