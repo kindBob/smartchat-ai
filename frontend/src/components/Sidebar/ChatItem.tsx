@@ -10,6 +10,7 @@ type ChatItemsProps = {
     onDeleteChat: (id: string) => void;
     onRenameChat: (id: string, newTitle: string) => void;
     onToggleActions: () => void;
+    onCloseActions: () => void;
 };
 
 function ChatItem({
@@ -20,6 +21,7 @@ function ChatItem({
     onRenameChat,
     onDeleteChat,
     onToggleActions,
+    onCloseActions,
 }: ChatItemsProps) {
     const [isRenaming, setIsRenaming] = useState(false);
     const [chatName, setChatName] = useState(chat.title);
@@ -66,6 +68,7 @@ function ChatItem({
                 }}
                 onToggleActions={onToggleActions}
                 actionsOpened={actionsOpened}
+                onCloseActions={onCloseActions}
             />
         </div>
     );
