@@ -13,3 +13,7 @@ $font-main: "Open Sans", sans-serif;
 body {
     font-family: $font-main;
 }
+
+::selection {
+    background-color: #b5b5b5a1;
+}

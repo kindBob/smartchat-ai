@@ -1,7 +1,5 @@
 import { useEffect, useRef } from "react";
-import RenameIcon from "../../assets/icons/RenameIcon";
-import SettingsIcon from "../../assets/icons/SettingsIcon";
-import TrashIcon from "../../assets/icons/TrashIcon";
+import { Pencil, Settings, Trash } from "lucide-react";
 
 type ChatItemActionsProps = {
     actionsOpened: boolean;
@@ -41,7 +39,7 @@ function ChatItemActions({ actionsOpened, onRename, onDelete, onToggleActions, o
                         }}
                         className="sidebar__chat-actions-rename">
                         Rename
-                        <RenameIcon />
+                        <Pencil />
                     </button>
 
                     <button
@@ -51,7 +49,7 @@ function ChatItemActions({ actionsOpened, onRename, onDelete, onToggleActions, o
                         }}
                         className="sidebar__chat-actions-delete">
                         Delete
-                        <TrashIcon />
+                        <Trash />
                     </button>
                 </div>
             )}
@@ -62,7 +60,7 @@ function ChatItemActions({ actionsOpened, onRename, onDelete, onToggleActions, o
                     onToggleActions();
                 }}
                 className="sidebar__chat-actions-open">
-                <SettingsIcon />
+                <Settings />
             </button>
         </div>
     );

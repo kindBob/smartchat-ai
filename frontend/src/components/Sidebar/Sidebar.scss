@@ -130,12 +130,10 @@ $accent-color: #a5b68d;
                 align-items: center;
                 justify-content: space-between;
                 gap: 8px;
-            }
 
-            &-rename {
                 svg {
-                    width: 32px;
-                    height: 32px;
+                    width: 23px;
+                    height: 23px;
                 }
             }
 
@@ -145,8 +143,6 @@ $accent-color: #a5b68d;
 
                 svg {
                     color: red;
-                    width: 23px;
-                    height: 23px;
                 }
             }
 

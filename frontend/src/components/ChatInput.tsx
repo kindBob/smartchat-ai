@@ -1,6 +1,5 @@
 import { useState } from "react";
-import StopIcon from "../assets/icons/StopIcon";
-import SendIcon from "../assets/icons/SendIcon";
+import { Send, Square } from "lucide-react";
 
 type ChatInputProps = {
     onSend: (text: string) => void;
@@ -35,7 +34,6 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
             <button
                 onClick={() => {
                     if (isGenerating) {
-                        console.log("is generating");
                         onStop();
                         return;
                     }
@@ -44,7 +42,7 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
                 }}
                 disabled={!isGenerating && !value.trim()}
                 aria-label={isGenerating ? "Stop generating" : "Send message"}>
-                {isGenerating ? <StopIcon /> : <SendIcon />}
+                {isGenerating ? <Square /> : <Send className="chat-input__send" />}
             </button>
         </div>
     );
