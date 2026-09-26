@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar/Sidebar";
 import type { ChatType, MessageType } from "../types/Chat";
-
-import "./Home.scss";
 import type { ConversationType } from "../types/Api";
 import { loadActiveChatId, loadChats, saveActiveChatId, saveChats } from "../utils/chatStorage";
 import { fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
 import { createConversation } from "../utils/conversation";
+import "./Home.scss";
+import { SquareMenu } from "lucide-react";
 
 function Home() {
     const [chats, setChats] = useState<ChatType[]>(() => {
@@ -26,6 +26,8 @@ function Home() {
 
         return chats[0].id;
     });
+
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -86,6 +88,7 @@ function Home() {
 
     function selectChat(id: string) {
         setActiveChatId(id);
+        setIsSidebarOpen(false);
     }
 
     function createMessage(text: string, sender: MessageType["sender"]): MessageType {
@@ -258,6 +261,9 @@ function Home() {
 
     return (
         <main className="home">
+            <button className="mobile-menu-button" onClick={() => setIsSidebarOpen(true)} aria-label="Open sidebar">
+                <SquareMenu />
+            </button>
             <Sidebar
                 chats={chats}
                 onNewChat={handleNewChat}
@@ -265,6 +271,8 @@ function Home() {
                 activeChatId={activeChatId}
                 onDeleteChat={deleteChat}
                 onRenameChat={renameChat}
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
             />
             <Chat chat={activeChat} onSend={sendMessage} onStop={stopTyping} />
         </main>
