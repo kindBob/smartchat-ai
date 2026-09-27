@@ -4,30 +4,31 @@ A modern AI chat application built with React, TypeScript, NestJS, and Google Ge
 
 ## Features
 
-* Multiple conversations
-* Create, rename, and delete chats
-* Persistent chats with LocalStorage
-* AI-generated chat titles
-* Stop response generation
-* Retry failed responses
-* Responsive design with mobile sidebar
-* API error handling
-* Message timestamps
+-   Multiple conversations
+-   Create, rename, and delete chats
+-   Persistent chats with LocalStorage
+-   AI-generated chat titles
+-   Stop response generation
+-   Retry failed responses
+-   Responsive design with mobile sidebar
+-   API error handling
+-   Message timestamps
+-   Rate limiting
 
 ## Tech Stack
 
 **Frontend**
 
-* React
-* TypeScript
-* Vite
-* SCSS
+-   React
+-   TypeScript
+-   Vite
+-   SCSS
 
 **Backend**
 
-* NestJS
-* Google Gemini API
-* class-validator
+-   NestJS
+-   Google Gemini API
+-   class-validator
 
 ## Project Structure
 

@@ -11,10 +11,12 @@ type ChatProps = {
 };
 
 function Chat({ chat, onSend, onStop, onRetry }: ChatProps) {
+    if (!chat) return null;
+
     return (
         <div className="chat">
             <MessageList
-                messages={chat?.messages}
+                messages={chat.messages}
                 onRetry={onRetry}
                 isResponseLoading={chat.isResponseLoading}
                 error={chat?.error}
