@@ -1,4 +1,4 @@
-import { Body, Controller, Post, BadRequestException, Get } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
 import { ChatService } from "./chat.service.js";
 import { GenerateTitleDto } from "./dto/generate-title.dto.js";
 import { SendMessageDto } from "./dto/send-message.dto.js";

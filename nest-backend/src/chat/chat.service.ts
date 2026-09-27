@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, InternalServerErrorException } from "@nestjs/common";
+import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
@@ -6,17 +6,20 @@ import { MessageDto } from "./dto/send-message.dto.js";
 @Injectable()
 export class ChatService {
     private readonly ai: GoogleGenAI;
+    private readonly model: string;
 
     constructor(private readonly configService: ConfigService) {
         this.ai = new GoogleGenAI({
-            apiKey: this.configService.get<string>("GEMINI_API_KEY"),
+            apiKey: this.configService.getOrThrow<string>("GEMINI_API_KEY"),
         });
+
+        this.model = this.configService.getOrThrow<string>("GEMINI_MODEL");
     }
 
     async generateResponse(messages: MessageDto[]) {
         try {
             const aiResponse = await this.ai.models.generateContent({
-                model: "gemini-3.5-flash-lite",
+                model: this.model,
                 contents: messages,
             });
 
@@ -31,7 +34,7 @@ export class ChatService {
     async generateTitle(message: string) {
         try {
             const aiResponse = await this.ai.interactions.create({
-                model: "gemini-3.5-flash-lite",
+                model: this.model,
                 input: `Generate a short title for this message.
             Rules: 
             - Return only the title
