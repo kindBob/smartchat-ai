@@ -112,6 +112,24 @@ function Home() {
         setActiveChatId(newChat.id);
     }
 
+    function retryResponse() {
+        setChats((prevChats) =>
+            prevChats.map((chat) => {
+                if (chat.id !== activeChatId) return chat;
+
+                return {
+                    ...chat,
+                    isResponseLoading: true,
+                    error: undefined,
+                };
+            })
+        );
+
+        const conversation = createConversation(activeChat.messages);
+
+        generateAssistantResponse(conversation);
+    }
+
     return (
         <main className="home">
             <button className="mobile-menu-button" onClick={() => setIsSidebarOpen(true)} aria-label="Open sidebar">
@@ -127,7 +145,7 @@ function Home() {
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
             />
-            <Chat chat={activeChat} onSend={sendMessage} onStop={stopTyping} />
+            <Chat chat={activeChat} onSend={sendMessage} onStop={stopTyping} onRetry={retryResponse} />
         </main>
     );
 }

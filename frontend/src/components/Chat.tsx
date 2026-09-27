@@ -7,12 +7,18 @@ type ChatProps = {
     chat: ChatType | undefined;
     onSend: (userMessage: string) => void;
     onStop: () => void;
+    onRetry: () => void;
 };
 
-function Chat({ chat, onSend, onStop }: ChatProps) {
+function Chat({ chat, onSend, onStop, onRetry }: ChatProps) {
     return (
         <div className="chat">
-            <MessageList messages={chat?.messages} isResponseLoading={chat.isResponseLoading} error={chat?.error} />
+            <MessageList
+                messages={chat?.messages}
+                onRetry={onRetry}
+                isResponseLoading={chat.isResponseLoading}
+                error={chat?.error}
+            />
             <ChatInput onSend={onSend} onStop={onStop} isGenerating={chat.isResponseLoading || chat.isTyping} />
         </div>
     );

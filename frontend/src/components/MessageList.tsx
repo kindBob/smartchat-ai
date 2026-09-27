@@ -7,9 +7,10 @@ type MessageListProps = {
     messages: MessageType[];
     isResponseLoading: boolean;
     error?: string;
+    onRetry: () => void;
 };
 
-function MessageList({ messages, isResponseLoading, error }: MessageListProps) {
+function MessageList({ messages, isResponseLoading, error, onRetry }: MessageListProps) {
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -23,7 +24,14 @@ function MessageList({ messages, isResponseLoading, error }: MessageListProps) {
             })}
 
             {isResponseLoading && <LoadingResponseIndicator />}
-            {error && <div className="chat-error">{error}</div>}
+            {error && (
+                <div className="chat-error">
+                    <div className="chat-error__message">{error}</div>
+                    <button onClick={onRetry} className="chat-error__button">
+                        Try again
+                    </button>
+                </div>
+            )}
             <div ref={bottomRef}></div>
         </div>
     );
