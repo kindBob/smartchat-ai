@@ -4,7 +4,7 @@ $accent-color: #a5b68d;
     width: 280px;
     min-width: 240px;
     height: 100dvh;
-    padding: 1.25rem;
+    padding: 12px 9px;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -35,14 +35,19 @@ $accent-color: #a5b68d;
 
     &__chat {
         min-width: 0;
+        max-width: 100%;
+
         display: flex;
         justify-content: space-between;
         align-items: center;
+
+        gap: 5px;
+
         padding: 0.75rem 0.9rem;
         border-radius: 8px;
         color: #cfcfcf;
         background: transparent;
-        transition: background-color 0.2s ease, color 0.2s ease;
+        transition: 0.2s ease;
         cursor: pointer;
 
         &:hover:not(:has(.sidebar__chat-actions-container:hover)) {
@@ -59,36 +64,25 @@ $accent-color: #a5b68d;
             flex: 1;
             min-width: 0;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
         &-input {
-            padding: 12px 15px;
+            flex: 1;
+            min-width: 0;
 
-            border: 2px solid transparent;
-            border-radius: 16px;
+            font-size: inherit;
+            white-space: inherit;
+            letter-spacing: inherit;
+            font-family: inherit;
+            font-weight: inherit;
+            color: inherit;
 
-            opacity: 0.9;
+            background: transparent;
 
             outline: none;
             resize: none;
-
-            font-family: inherit;
-            font-size: 15px;
-            line-height: 20px;
-            color: #252525;
-
-            transition: 0.2s ease;
-
-            &::placeholder {
-                color: #999;
-            }
-
-            &:focus {
-                border-color: $accent-color;
-                opacity: 1;
-            }
+            border: none;
+            border-bottom: 1px solid #454545;
         }
 
         &-actions {

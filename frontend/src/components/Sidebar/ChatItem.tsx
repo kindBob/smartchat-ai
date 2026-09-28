@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChatType } from "../../types/Chat";
 import ChatItemActions from "./ChatItemActions";
 
@@ -24,36 +24,78 @@ function ChatItem({
     onCloseActions,
 }: ChatItemsProps) {
     const [isRenaming, setIsRenaming] = useState(false);
-    const [chatName, setChatName] = useState(chat.title);
+    const [chatTitle, setChatTitle] = useState(chat.title);
+
+    const inputRef = useRef<HTMLInputElement>(null);
+    const chatItemRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (isRenaming) {
+            inputRef.current?.focus();
+            inputRef.current?.select();
+        }
+    }, [isRenaming]);
+
+    useEffect(() => {
+        if (!isRenaming && !actionsOpened) return;
+
+        function handleClickOutside(event: MouseEvent) {
+            if (chatItemRef.current && !chatItemRef.current.contains(event.target as Node)) {
+                cancelRename();
+                onCloseActions();
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isRenaming, actionsOpened, chat.title, onCloseActions]);
 
     function handleRename() {
-        const newTitle = chatName.trim();
+        const newTitle = chatTitle.trim();
 
         if (newTitle !== "") {
             onRenameChat(chat.id, newTitle);
-            setChatName(newTitle);
+            setChatTitle(newTitle);
         }
 
         setIsRenaming(false);
+        onCloseActions();
+    }
+
+    function cancelRename() {
+        setIsRenaming(false);
+        setChatTitle(chat.title);
     }
 
     return (
         <div
+            ref={chatItemRef}
             className={"sidebar__chat" + (isActive ? " --active" : "")}
-            key={chat.id}
-            onClick={() => onSelectChat(chat.id)}>
+            onClick={() => {
+                onSelectChat(chat.id);
+
+                if (isRenaming) {
+                    inputRef.current?.focus();
+                    inputRef.current?.select();
+
+                    onToggleActions();
+                }
+            }}>
             {isRenaming ? (
                 <input
+                    ref={inputRef}
                     className="sidebar__chat-input"
-                    value={chatName}
-                    onChange={(e) => setChatName(e.target.value)}
+                    value={chatTitle}
+                    onChange={(e) => setChatTitle(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             handleRename();
                         } else if (e.key === "Escape") {
-                            setIsRenaming(false);
-                            setChatName(chat.title);
+                            cancelRename();
                         }
                     }}
                 />
@@ -68,7 +110,6 @@ function ChatItem({
                 }}
                 onToggleActions={onToggleActions}
                 actionsOpened={actionsOpened}
-                onCloseActions={onCloseActions}
             />
         </div>
     );
