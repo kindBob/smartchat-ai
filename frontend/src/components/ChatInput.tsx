@@ -42,7 +42,7 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
                 }}
                 disabled={!isGenerating && !value.trim()}
                 aria-label={isGenerating ? "Stop generating" : "Send message"}>
-                {isGenerating ? <Square /> : <Send className="chat-input__send" />}
+                {isGenerating ? <Square className="chat-input__stop" /> : <Send className="chat-input__send" />}
             </button>
         </div>
     );

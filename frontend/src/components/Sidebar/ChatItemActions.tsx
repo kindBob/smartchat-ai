@@ -35,6 +35,7 @@ function ChatItemActions({ actionsOpened, onRename, onDelete, onToggleActions, o
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
+
                             onRename();
                         }}
                         className="sidebar__chat-actions-rename">

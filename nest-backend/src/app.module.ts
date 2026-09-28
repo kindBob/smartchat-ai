@@ -12,7 +12,7 @@ import { APP_GUARD } from "@nestjs/core";
         ThrottlerModule.forRoot([
             {
                 ttl: 60_000,
-                limit: 10,
+                limit: 5,
             },
         ]),
         ChatModule,
