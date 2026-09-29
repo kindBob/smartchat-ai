@@ -89,6 +89,7 @@ function ChatItem({
                     ref={inputRef}
                     className="sidebar__chat-input"
                     value={chatTitle}
+                    maxLength={75}
                     onChange={(e) => setChatTitle(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => {
@@ -108,7 +109,10 @@ function ChatItem({
                 onDelete={() => {
                     onDeleteChat(chat.id);
                 }}
-                onToggleActions={onToggleActions}
+                onToggleActions={() => {
+                    onToggleActions();
+                    setIsRenaming(false);
+                }}
                 actionsOpened={actionsOpened}
             />
         </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send, Square } from "lucide-react";
 
 type ChatInputProps = {
@@ -8,29 +8,52 @@ type ChatInputProps = {
 };
 
 function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
-    const [value, setValue] = useState("");
+    const [message, setMessage] = useState("");
+
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const MAX_TEXTAREA_HEIGHT = 120;
+
+    function resizeTextArea() {
+        const textarea = textareaRef.current;
+
+        if (!textarea) return;
+
+        textarea.style.height = "auto";
+        textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
+    }
+
+    useEffect(() => {
+        resizeTextArea();
+    }, [message]);
 
     function sendMessage() {
-        if (!value.trim() || isGenerating) return;
+        if (!message.trim() || isGenerating) return;
 
-        onSend(value);
-        setValue("");
+        onSend(message);
+        setMessage("");
     }
 
     return (
         <div className="chat-input">
             <textarea
-                value={value}
-                disabled={isGenerating}
+                ref={textareaRef}
+                value={message}
                 placeholder={isGenerating ? "AI is typing..." : "Message SmartChat AI..."}
-                onChange={(e) => setValue(e.target.value)}
+                onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                    }
+                    if (e.key !== "Enter") return;
+
+                    if (e.shiftKey) return;
+
+                    e.preventDefault();
+
+                    if (isGenerating) return;
+
+                    sendMessage();
                 }}
             />
+
             <button
                 onClick={() => {
                     if (isGenerating) {
@@ -40,7 +63,6 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
 
                     sendMessage();
                 }}
-                disabled={!isGenerating && !value.trim()}
                 aria-label={isGenerating ? "Stop generating" : "Send message"}>
                 {isGenerating ? <Square className="chat-input__stop" /> : <Send className="chat-input__send" />}
             </button>
