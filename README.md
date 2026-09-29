@@ -4,71 +4,111 @@ A modern AI chat application built with React, TypeScript, NestJS, and Google Ge
 
 ## Features
 
--   Multiple conversations
--   Create, rename, and delete chats
--   Persistent chats with LocalStorage
--   AI-generated chat titles
--   Stop response generation
--   Retry failed responses
--   Responsive design with mobile sidebar
--   API error handling
--   Message timestamps
--   Rate limiting
+* Multiple conversations
+* AI-generated chat titles
+* Persistent chats with LocalStorage
+* Create, rename, and delete chats
+* Stop response generation
+* Retry failed responses
+* Responsive design
+* Typing animation
+* API rate limiting
 
 ## Tech Stack
 
-**Frontend**
+### Frontend
 
--   React
--   TypeScript
--   Vite
--   SCSS
+* React
+* TypeScript
+* Vite
+* SCSS
+* Lucide React
 
-**Backend**
+### Backend
 
--   NestJS
--   Google Gemini API
--   class-validator
+* NestJS
+* TypeScript
+* Google Gemini API
+* Class Validator
+* Throttler
 
-## Project Structure
+## Architecture
 
 ```text
-SmartChat
-├── frontend/    # React application
-└── backend/     # NestJS API
+React + TypeScript
+        |
+        v
+     REST API
+        |
+        v
+   NestJS Backend
+        |
+        v
+  Google Gemini API
 ```
 
-## Setup
+## Getting Started
 
-### Frontend
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/kindBob/smartchat-ai.git
+cd smartchat-ai
+```
+
+### 2. Install dependencies
+
+Frontend:
 
 ```bash
 cd frontend
 npm install
-npm run dev
 ```
 
-Create `frontend/.env`:
-
-```env
-VITE_API_URL=http://localhost:3001
-```
-
-### Backend
+Backend:
 
 ```bash
-cd backend
+cd nest-backend
 npm install
+```
+
+### 3. Environment Variables
+
+Create a `.env` file in the backend based on `.env.example`:
+
+```env
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash-lite
+PORT=3001
+FRONTEND_URL=http://localhost:5173
+```
+
+Add your Google Gemini API key to `GEMINI_API_KEY`.
+
+### 4. Run the application
+
+Start the backend:
+
+```bash
+cd nest-backend
 npm run start:dev
 ```
 
-Create `backend/.env`:
+Start the frontend:
 
-```env
-GEMINI_API_KEY=your_api_key
-PORT=3001
+```bash
+cd frontend
+npm run dev
 ```
 
-## Status
+## Deployment
 
-🚧 **In development**
+* Frontend: Vercel
+* Backend: Render
+* AI: Google Gemini
+
+## Author
+
+Vladyslav Kostromin
+
+GitHub: https://github.com/kindBob
