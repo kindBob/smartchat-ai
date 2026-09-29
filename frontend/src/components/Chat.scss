@@ -203,18 +203,10 @@ $send-button-width: 40px;
 
     animation: messageAppear 0.2s ease-out;
 
-    &__sender {
-        margin-bottom: 4px;
-
-        font-size: 12px;
-        font-weight: 600;
-        opacity: 0.65;
-    }
-
     &__text {
         margin: 0;
 
-        font-size: 15px;
+        font-size: 16px;
         line-height: 1.5;
 
         white-space: pre-wrap;
@@ -374,7 +366,7 @@ $send-button-width: 40px;
         padding: 10px 13px;
 
         &__text {
-            font-size: 14px;
+            font-size: 15px;
             line-height: 1.45;
         }
 
