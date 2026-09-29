@@ -70,7 +70,7 @@ $send-button-width: 40px;
         resize: none;
 
         font-family: inherit;
-        font-size: 15px;
+        font-size: 16px;
         line-height: 20px;
         color: #252525;
 
@@ -361,8 +361,6 @@ $send-button-width: 40px;
         textarea {
             height: 44px;
             padding: 8px calc($send-button-width + 8px) 8px 10px;
-
-            font-size: 14px;
         }
 
         button {
