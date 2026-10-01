@@ -3,6 +3,7 @@ import { ChatModule } from "./chat/chat.module.js";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
+import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard.js";
 
 @Module({
     imports: [
@@ -20,7 +21,7 @@ import { APP_GUARD } from "@nestjs/core";
     providers: [
         {
             provide: APP_GUARD,
-            useClass: ThrottlerGuard,
+            useClass: CustomThrottlerGuard,
         },
     ],
 })

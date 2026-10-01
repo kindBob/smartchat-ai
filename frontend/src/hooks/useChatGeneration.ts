@@ -1,6 +1,6 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import type { ChatType, MessageType } from "../types/Chat";
-import { fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
+import { ApiError, fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
 import type { ConversationType } from "../types/Api";
 import { createMessage } from "../utils/conversation";
 
@@ -52,7 +52,31 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") return;
 
-            console.error("Error generating assistant message:", error);
+            if (error instanceof ApiError) {
+                console.error("API error:", error.message);
+
+                const chatErrorMessage =
+                    error.statusCode === 429 && error.retryAfter
+                        ? `You can send another message in ${error.retryAfter} seconds`
+                        : "Sorry, something went wrong.";
+
+                setChats((prevChats) =>
+                    prevChats.map((chat) => {
+                        if (chat.id !== currentChatId) return chat;
+
+                        return {
+                            ...chat,
+                            isTyping: false,
+                            isResponseLoading: false,
+                            error: chatErrorMessage,
+                        };
+                    })
+                );
+
+                return;
+            }
+
+            console.error("Unexpected error: ", error);
 
             setChats((prevChats) =>
                 prevChats.map((chat) => {

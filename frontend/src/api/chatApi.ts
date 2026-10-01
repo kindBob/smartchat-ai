@@ -1,12 +1,24 @@
 import type { ConversationType } from "../types/Api";
 
+export class ApiError extends Error {
+    statusCode: number;
+    retryAfter?: number;
+
+    constructor(message: string, statusCode: number, retryAfter?: number) {
+        super(message);
+        this.name = "ApiError";
+        this.statusCode = statusCode;
+        this.retryAfter = retryAfter;
+    }
+}
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 async function handleResponse<T>(request: Response): Promise<T> {
     const data = await request.json();
 
     if (!request.ok) {
-        throw new Error(data.message || "Request failed");
+        throw new ApiError(data.message || "Request failed", data.statusCode || request.status, data.retryAfter);
     }
 
     return data;
