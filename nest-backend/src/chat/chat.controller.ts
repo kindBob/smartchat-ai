@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post } from "@nestjs/common";
 import { ChatService } from "./chat.service.js";
 import { GenerateTitleDto } from "./dto/generate-title.dto.js";
 import { SendMessageDto } from "./dto/send-message.dto.js";
+import { CreateChatDto } from "./dto/create-chat.dto.js";
 
 @Controller("chat")
 export class ChatController {
@@ -14,6 +15,11 @@ export class ChatController {
         return {
             response: title,
         };
+    }
+
+    @Post("create")
+    async createChat(@Body() dto: CreateChatDto) {
+        return this.chatService.createChat(dto.userId, dto.title);
     }
 
     @Post()

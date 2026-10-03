@@ -2,13 +2,17 @@ import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
+import { PrismaService } from "../database/prisma.service.js";
 
 @Injectable()
 export class ChatService {
     private readonly ai: GoogleGenAI;
     private readonly model: string;
 
-    constructor(private readonly configService: ConfigService) {
+    constructor(
+        private readonly configService: ConfigService,
+        private readonly prisma: PrismaService,
+    ) {
         this.ai = new GoogleGenAI({
             apiKey: this.configService.getOrThrow<string>("GEMINI_API_KEY"),
         });
@@ -58,5 +62,25 @@ export class ChatService {
 
             throw new InternalServerErrorException("Failed to generate title");
         }
+    }
+
+    async createChat(userId: string, title: string) {
+        return this.prisma.chat.create({
+            data: {
+                userId,
+                title,
+            },
+        });
+    }
+
+    async getUserChats(userId: string) {
+        return this.prisma.chat.findMany({
+            where: {
+                userId,
+            },
+            orderBy: {
+                updatedAt: "desc",
+            },
+        });
     }
 }

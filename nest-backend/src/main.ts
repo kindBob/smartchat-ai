@@ -10,15 +10,17 @@ async function bootstrap() {
 
     const port = Number(configService.getOrThrow<number>("PORT"));
 
-    app.enableCors({
-        origin: configService.getOrThrow<string>("FRONTEND_URL"),
-    });
+    // app.enableCors({
+    //     origin: configService.getOrThrow<string>("FRONTEND_URL"),
+    // });
+
+    app.enableCors();
 
     app.useGlobalPipes(
         new ValidationPipe({
             whitelist: true,
             transform: true,
-        })
+        }),
     );
 
     await app.listen(port);

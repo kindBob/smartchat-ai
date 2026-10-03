@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard.js";
+import { PrismaModule } from "./database/prisma.module.js";
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard.js"
             },
         ]),
         ChatModule,
+        PrismaModule,
     ],
     providers: [
         {

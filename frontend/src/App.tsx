@@ -15,7 +15,8 @@ function App() {
 
     return (
         <>
-            <button onClick={signOut}> Sign Out</button> <Home />
+            <button onClick={signOut}> Sign Out</button>
+            <Home />
         </>
     );
 }
