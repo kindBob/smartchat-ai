@@ -57,7 +57,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
 
                 const chatErrorMessage =
                     error.statusCode === 429 && error.retryAfter
-                        ? `You can send another message in ${error.retryAfter} seconds`
+                        ? `You can send another message in ${error.retryAfter} seconds.`
                         : "Sorry, something went wrong.";
 
                 setChats((prevChats) =>
