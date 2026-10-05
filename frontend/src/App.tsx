@@ -1,4 +1,4 @@
-import { AuthForm } from "@neondatabase/auth/react";
+import AuthForm from "./components/auth/AuthForm";
 import { useAuth } from "./hooks/useAuth";
 import Home from "./pages/Home";
 
