@@ -11,6 +11,7 @@ type SidebarProps = {
     onNewChat: () => void;
     onDeleteChat: (id: string) => void;
     onRenameChat: (id: string, newTitle: string) => void;
+    onSignOut: () => Promise<void>;
     onClose: () => void;
 };
 
@@ -22,6 +23,7 @@ function Sidebar({
     onSelectChat,
     onNewChat,
     onDeleteChat,
+    onSignOut,
     onRenameChat,
 }: SidebarProps) {
     const [openedActionsChatId, setOpenedActionsChatId] = useState<string | null>(null);
@@ -38,24 +40,41 @@ function Sidebar({
                     + New Chat
                 </button>
 
-                {chats.map((chat) => (
-                    <ChatItem
-                        key={chat.id}
-                        chat={chat}
-                        isActive={chat.id === activeChatId}
-                        onSelectChat={(id: string) => {
-                            setOpenedActionsChatId(null);
-                            onSelectChat(id);
-                        }}
-                        onDeleteChat={onDeleteChat}
-                        onRenameChat={onRenameChat}
-                        actionsOpened={openedActionsChatId === chat.id}
-                        onToggleActions={() => {
-                            setOpenedActionsChatId((currentId) => (currentId === chat.id ? null : chat.id));
-                        }}
-                        onCloseActions={closeActions}
-                    />
-                ))}
+                <div className="sidebar__chats">
+                    {chats.map((chat) => (
+                        <ChatItem
+                            key={chat.id}
+                            chat={chat}
+                            isActive={chat.id === activeChatId}
+                            onSelectChat={(id: string) => {
+                                setOpenedActionsChatId(null);
+                                onSelectChat(id);
+                            }}
+                            onDeleteChat={onDeleteChat}
+                            onRenameChat={onRenameChat}
+                            actionsOpened={openedActionsChatId === chat.id}
+                            onToggleActions={() => {
+                                setOpenedActionsChatId((currentId) => (currentId === chat.id ? null : chat.id));
+                            }}
+                            onCloseActions={closeActions}
+                        />
+                    ))}
+                </div>
+
+                <div className="sidebar-account">
+                    <div className="sidebar-user">
+                        <div className="sidebar-avatar">S</div>
+
+                        <div className="sidebar-user-info">
+                            <span className="sidebar-user-name">SmartChat User</span>
+                            <span className="sidebar-user-status">Online</span>
+                        </div>
+                    </div>
+
+                    <button className="sidebar-sign-out" onClick={onSignOut}>
+                        Sign out
+                    </button>
+                </div>
             </aside>
         </>
     );

@@ -9,7 +9,11 @@ import "./Home.scss";
 import { createChat, fetchChats, deleteChat as deleteChatRequest, updateChat } from "../api/chatApi";
 import { saveActiveChatId } from "../utils/chatStorage";
 
-function Home() {
+type HomeProps = {
+    onSignOut: () => Promise<void>;
+};
+
+function Home({ onSignOut }: HomeProps) {
     const [chats, setChats] = useState<ChatType[]>([]);
     const [isLoadingChats, setIsLoadingChats] = useState(true);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -155,7 +159,17 @@ function Home() {
     }
 
     if (isLoadingChats) {
-        return <div>Loading chats...</div>;
+        if (isLoadingChats) {
+            return (
+                <main className="home-loading">
+                    <div className="loading-logo">S</div>
+
+                    <div className="loading-spinner" />
+
+                    <p>Loading your chats...</p>
+                </main>
+            );
+        }
     }
 
     return (
@@ -175,6 +189,7 @@ function Home() {
                 activeChatId={activeChatId}
                 onDeleteChat={deleteChat}
                 onRenameChat={renameChat}
+                onSignOut={onSignOut}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
             />
