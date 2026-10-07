@@ -31,5 +31,5 @@ export type ChatResponse = {
         role: "USER" | "MODEL";
         chatId: string;
         createdAt: string;
-    };
+    }[];
 };

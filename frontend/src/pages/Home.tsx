@@ -25,17 +25,31 @@ function Home() {
             try {
                 const chatResponses = await fetchChats();
 
-                const chats: ChatType[] = chatResponses.map((chat) => ({
+                const loadedChats: ChatType[] = chatResponses.map((chat) => ({
                     id: chat.id,
                     title: chat.title,
-                    messages: [],
+                    messages: chat.messages.map((message) => ({
+                        id: message.id,
+                        text: message.text,
+                        sender: message.role === "USER" ? "user" : "assistant",
+                        timestamp: message.createdAt,
+                    })),
                     isTyping: false,
                     isResponseLoading: false,
                 }));
 
-                setChats(chats);
+                if (loadedChats.length === 0) {
+                    const newChat = await handleNewChat();
 
-                if (chats.length > 0) setActiveChatId(chats[0].id);
+                    setChats((prev) => [newChat, ...prev]);
+                    setActiveChatId(newChat.id);
+
+                    return;
+                }
+
+                setChats(loadedChats);
+
+                if (loadedChats.length > 0) setActiveChatId(loadedChats[0].id);
             } catch (error) {
                 console.error("Failed to load chats:", error);
             } finally {
@@ -47,26 +61,26 @@ function Home() {
     }, []);
 
     useEffect(() => {
-        saveActiveChatId(activeChatId);
+        if (!activeChat) return;
+        saveActiveChatId(activeChatId!);
     }, [activeChatId]);
 
-    async function deleteChat(id: string) {
+    async function deleteChat(chatId: string) {
         try {
-            await deleteChatRequest(id);
+            await deleteChatRequest(chatId);
 
-            const newChats = chats.filter((chat) => chat.id !== id);
+            const newChats = chats.filter((chat) => chat.id !== chatId);
 
             if (newChats.length === 0) {
-                await handleNewChat();
+                const newChat = await handleNewChat();
+
+                setChats([newChat]);
+                setActiveChatId(newChat.id);
 
                 return;
             }
 
             setChats(newChats);
-
-            if (id === activeChatId) {
-                setActiveChatId(newChats[0].id);
-            }
         } catch (error) {
             console.error("Failed to delete chat:", error);
         }
@@ -120,8 +134,7 @@ function Home() {
                 isResponseLoading: false,
             };
 
-            setChats((prev) => [newChat, ...prev]);
-            setActiveChatId(newChat.id);
+            return newChat;
         } catch (error) {
             console.error("Failed to create chat:", error);
         }

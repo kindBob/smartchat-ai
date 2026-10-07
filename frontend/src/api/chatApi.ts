@@ -11,13 +11,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
     return data;
 }
 
-export async function fetchChatTitle(message: string): Promise<string> {
+export async function fetchChatTitle(currentChatId: string, message: string): Promise<string> {
     const request = await authFetch("/chat/title", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ chatId: currentChatId, message }),
     });
 
     const data = await handleResponse<{ response: string }>(request);
@@ -26,6 +26,7 @@ export async function fetchChatTitle(message: string): Promise<string> {
 }
 
 export async function fetchAssistantResponse(
+    chatId: string,
     conversation: ConversationType[],
     controller: AbortController
 ): Promise<string> {
@@ -36,6 +37,7 @@ export async function fetchAssistantResponse(
         },
         signal: controller.signal,
         body: JSON.stringify({
+            chatId,
             messages: conversation,
         }),
     });

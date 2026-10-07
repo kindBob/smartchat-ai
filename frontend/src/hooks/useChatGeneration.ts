@@ -5,7 +5,7 @@ import { ApiError, type ConversationType } from "../types/Api";
 import { createMessage } from "../utils/conversation";
 
 type UseChatGenerationProps = {
-    activeChatId: string;
+    activeChatId: string | null;
     setChats: Dispatch<SetStateAction<ChatType[]>>;
 };
 
@@ -25,13 +25,15 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
     }, []);
 
     async function generateAssistantResponse(conversation: ConversationType[]) {
+        if (!activeChatId) return;
+
         const currentChatId = activeChatId;
 
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
         try {
-            const aiResponse = await fetchAssistantResponse(conversation, controller);
+            const aiResponse = await fetchAssistantResponse(currentChatId, conversation, controller);
 
             const assistantMessage = createMessage("", "assistant");
 
@@ -163,11 +165,13 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
         );
     }
 
-    async function generateTitle(message: string) {
+    async function generateChatTitle(message: string) {
+        if (!activeChatId) return;
+
         const currentChatId = activeChatId;
 
         try {
-            const newTitle = await fetchChatTitle(message);
+            const newTitle = await fetchChatTitle(currentChatId, message);
 
             setChats((prev) => prev.map((chat) => (chat.id === currentChatId ? { ...chat, title: newTitle } : chat)));
         } catch (error) {
@@ -177,7 +181,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
 
     return {
         generateAssistantResponse,
-        generateTitle,
+        generateTitle: generateChatTitle,
         stopTyping,
     };
 }

@@ -19,8 +19,8 @@ export class ChatController {
 
     @UseGuards(AuthGuard)
     @Post("title")
-    async generateTitle(@Body() dto: GenerateTitleDto) {
-        const title = await this.chatService.generateTitle(dto.message);
+    async generateTitle(@Request() request: AuthenticatedRequest, @Body() dto: GenerateTitleDto) {
+        const title = await this.chatService.generateTitle(request.user.id, dto.chatId, dto.message);
 
         return {
             response: title,
@@ -41,8 +41,8 @@ export class ChatController {
 
     @UseGuards(AuthGuard, CustomThrottlerGuard)
     @Post()
-    async generateResponse(@Body() dto: SendMessageDto) {
-        const response = await this.chatService.generateResponse(dto.messages);
+    async generateResponse(@Request() request: AuthenticatedRequest, @Body() dto: SendMessageDto) {
+        const response = await this.chatService.generateResponse(request.user.id, dto.chatId, dto.messages);
 
         return {
             response,
