@@ -38,18 +38,8 @@ function Home() {
                     isResponseLoading: false,
                 }));
 
-                if (loadedChats.length === 0) {
-                    const newChat = await handleNewChat();
-
-                    setChats((prev) => [newChat, ...prev]);
-                    setActiveChatId(newChat.id);
-
-                    return;
-                }
-
                 setChats(loadedChats);
-
-                if (loadedChats.length > 0) setActiveChatId(loadedChats[0].id);
+                setActiveChatId(loadedChats[0].id);
             } catch (error) {
                 console.error("Failed to load chats:", error);
             } finally {
@@ -75,7 +65,7 @@ function Home() {
                 const newChat = await handleNewChat();
 
                 setChats([newChat]);
-                setActiveChatId(newChat.id);
+                setActiveChatId(newChat?.id);
 
                 return;
             }
@@ -169,7 +159,12 @@ function Home() {
             </button>
             <Sidebar
                 chats={chats}
-                onNewChat={handleNewChat}
+                onNewChat={async () => {
+                    const newChat = await handleNewChat();
+
+                    setChats((prev) => [newChat, ...prev]);
+                    setActiveChatId(newChat.id);
+                }}
                 onSelectChat={selectChat}
                 activeChatId={activeChatId}
                 onDeleteChat={deleteChat}

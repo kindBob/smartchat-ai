@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { authClient } from "../../auth";
 
-function AuthForm() {
+type AuthFormProps = {
+    onAuthSuccess: () => Promise<void>;
+};
+
+function AuthForm({ onAuthSuccess }: AuthFormProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isSignUp, setIsSignUp] = useState(true);
@@ -30,7 +34,7 @@ function AuthForm() {
             return;
         }
 
-        window.location.reload();
+        onAuthSuccess();
     };
 
     return (

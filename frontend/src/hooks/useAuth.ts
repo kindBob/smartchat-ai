@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { authClient } from "../auth";
 
 export function useAuth() {
@@ -6,16 +6,25 @@ export function useAuth() {
     const [user, setUser] = useState<unknown>(null);
     const [loading, setLoading] = useState(true);
 
+    const refreshSession = useCallback(async () => {
+        const result = await authClient.getSession();
+
+        if (result.data?.session && result.data?.user) {
+            setSession(result.data.session);
+            setUser(result.data.user);
+        } else {
+            setSession(null);
+            setUser(null);
+        }
+    }, []);
+
     useEffect(() => {
         const loadSession = async () => {
-            const result = await authClient.getSession();
-
-            if (result.data?.session && result.data?.user) {
-                setSession(result.data.session);
-                setUser(result.data.user);
+            try {
+                await refreshSession();
+            } finally {
+                setLoading(false);
             }
-
-            setLoading(false);
         };
 
         loadSession();
@@ -33,5 +42,6 @@ export function useAuth() {
         user,
         loading,
         signOut,
+        refreshSession,
     };
 }

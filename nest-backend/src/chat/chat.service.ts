@@ -148,10 +148,33 @@ export class ChatService {
     }
 
     async getUserChats(userId: string) {
-        return this.prisma.chat.findMany({
+        const chats = await this.prisma.chat.findMany({
             where: {
                 userId,
             },
+            include: {
+                messages: {
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                },
+            },
+            orderBy: {
+                updatedAt: "desc",
+            },
+        });
+
+        if (chats.length > 0) return chats;
+
+        await this.prisma.chat.create({
+            data: {
+                userId,
+                title: "New Chat",
+            },
+        });
+
+        return this.prisma.chat.findMany({
+            where: { userId },
             include: {
                 messages: {
                     orderBy: {
