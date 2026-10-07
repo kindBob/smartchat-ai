@@ -147,6 +147,24 @@ export class ChatService {
         return { message: "Chat deleted successfully" };
     }
 
+    async updateChat(userId: string, chatId: string, title: string) {
+        const result = await this.prisma.chat.updateMany({
+            where: {
+                id: chatId,
+                userId,
+            },
+            data: {
+                title,
+            },
+        });
+
+        if (result.count === 0) throw new NotFoundException("Chat not found");
+
+        return {
+            message: "Chat updated successfully",
+        };
+    }
+
     async getUserChats(userId: string) {
         const chats = await this.prisma.chat.findMany({
             where: {

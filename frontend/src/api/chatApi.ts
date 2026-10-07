@@ -69,6 +69,20 @@ export async function deleteChat(chatId: string) {
     return handleResponse<{ message: string }>(request);
 }
 
+export async function updateChat(chatId: string, title: string) {
+    const request = await authFetch(`/chat/${chatId}`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            title,
+        }),
+    });
+
+    return handleResponse<{ message: string }>(request);
+}
+
 export async function fetchChats(): Promise<ChatResponse[]> {
     const request = await authFetch("/chat");
 

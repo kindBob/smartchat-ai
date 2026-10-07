@@ -6,7 +6,7 @@ import { createConversation, createMessage } from "../utils/conversation";
 import { SquareMenu } from "lucide-react";
 import { useChatGeneration } from "../hooks/useChatGeneration";
 import "./Home.scss";
-import { createChat, fetchChats, deleteChat as deleteChatRequest } from "../api/chatApi";
+import { createChat, fetchChats, deleteChat as deleteChatRequest, updateChat } from "../api/chatApi";
 import { saveActiveChatId } from "../utils/chatStorage";
 
 function Home() {
@@ -76,8 +76,14 @@ function Home() {
         }
     }
 
-    function renameChat(id: string, newTitle: string) {
-        setChats((prev) => prev.map((chat) => (chat.id === id ? { ...chat, title: newTitle } : chat)));
+    async function renameChat(id: string, newTitle: string) {
+        try {
+            setChats((prev) => prev.map((chat) => (chat.id === id ? { ...chat, title: newTitle } : chat)));
+
+            await updateChat(id, newTitle);
+        } catch (error) {
+            console.error("Failed to rename chat:", error);
+        }
     }
 
     function selectChat(id: string) {

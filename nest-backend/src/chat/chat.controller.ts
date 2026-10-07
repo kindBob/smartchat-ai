@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, Request, Param, Delete } from "@nestjs/common";
+import { Body, Controller, Get, Post, UseGuards, Request, Param, Delete, Patch } from "@nestjs/common";
 import { ChatService } from "./chat.service.js";
 import { GenerateTitleDto } from "./dto/generate-title.dto.js";
 import { SendMessageDto } from "./dto/send-message.dto.js";
@@ -6,6 +6,7 @@ import { CreateChatDto } from "./dto/create-chat.dto.js";
 import type { AuthenticatedRequest } from "../auth/auth.types.js";
 import { AuthGuard } from "../auth/auth.guard.js";
 import { CustomThrottlerGuard } from "../common/guards/custom-throttler.guard.js";
+import { UpdateChatDto } from "./dto/update-chat.dto.js";
 
 @Controller("chat")
 export class ChatController {
@@ -37,6 +38,16 @@ export class ChatController {
     @Delete(":id")
     async deleteChat(@Request() request: AuthenticatedRequest, @Param("id") chatId: string) {
         return this.chatService.deleteChat(request.user.id, chatId);
+    }
+
+    @UseGuards(AuthGuard)
+    @Patch(":id")
+    async updateChat(
+        @Request() request: AuthenticatedRequest,
+        @Param("id") chatId: string,
+        @Body() dto: UpdateChatDto
+    ) {
+        return this.chatService.updateChat(request.user.id, chatId, dto.title);
     }
 
     @UseGuards(AuthGuard, CustomThrottlerGuard)
