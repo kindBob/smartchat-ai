@@ -10,7 +10,7 @@ function AuthForm({ onAuthSuccess }: AuthFormProps) {
     const [isSignUp, setIsSignUp] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
@@ -20,7 +20,7 @@ function AuthForm({ onAuthSuccess }: AuthFormProps) {
                 : await authClient.signIn.email({ email, password });
 
             if (result.error) {
-                setError(result.error.message);
+                setError(result.error.message ?? "Authentication failed.");
                 return;
             }
 

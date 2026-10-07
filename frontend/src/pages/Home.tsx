@@ -69,7 +69,7 @@ function Home({ onSignOut }: HomeProps) {
                 const newChat = await handleNewChat();
 
                 setChats([newChat]);
-                setActiveChatId(newChat?.id);
+                setActiveChatId(newChat.id);
 
                 return;
             }
@@ -122,7 +122,7 @@ function Home({ onSignOut }: HomeProps) {
         generateAssistantResponse(conversation);
     }
 
-    async function handleNewChat() {
+    async function handleNewChat(): Promise<ChatType> {
         try {
             const chat = await createChat("New Chat");
 
@@ -137,6 +137,7 @@ function Home({ onSignOut }: HomeProps) {
             return newChat;
         } catch (error) {
             console.error("Failed to create chat:", error);
+            throw error;
         }
     }
 
