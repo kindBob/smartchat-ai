@@ -1,7 +1,7 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import type { ChatType, MessageType } from "../types/Chat";
-import { ApiError, fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
-import type { ConversationType } from "../types/Api";
+import { fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
+import { ApiError, type ConversationType } from "../types/Api";
 import { createMessage } from "../utils/conversation";
 
 type UseChatGenerationProps = {

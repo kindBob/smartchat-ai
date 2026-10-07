@@ -2,29 +2,17 @@ import { useEffect, useState } from "react";
 import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar/Sidebar";
 import type { ChatType } from "../types/Chat";
-import { loadActiveChatId, loadChats, saveActiveChatId, saveChats } from "../utils/chatStorage";
 import { createConversation, createMessage } from "../utils/conversation";
 import { SquareMenu } from "lucide-react";
 import { useChatGeneration } from "../hooks/useChatGeneration";
 import "./Home.scss";
+import { createChat, fetchChats, deleteChat as deleteChatRequest } from "../api/chatApi";
+import { saveActiveChatId } from "../utils/chatStorage";
 
 function Home() {
-    const [chats, setChats] = useState<ChatType[]>(() => {
-        const storedChats = loadChats();
-
-        if (!storedChats || storedChats.length === 0) return [createNewChat()];
-
-        return storedChats;
-    });
-    const [activeChatId, setActiveChatId] = useState<string>(() => {
-        const storedActiveChatId = loadActiveChatId();
-
-        if (storedActiveChatId && chats.some((chat) => chat.id === storedActiveChatId)) {
-            return storedActiveChatId;
-        }
-
-        return chats[0].id;
-    });
+    const [chats, setChats] = useState<ChatType[]>([]);
+    const [isLoadingChats, setIsLoadingChats] = useState(true);
+    const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -33,39 +21,54 @@ function Home() {
     const { generateAssistantResponse, generateTitle, stopTyping } = useChatGeneration({ activeChatId, setChats });
 
     useEffect(() => {
-        saveChats(chats);
-    }, [chats]);
+        async function loadUserChats() {
+            try {
+                const chatResponses = await fetchChats();
+
+                const chats: ChatType[] = chatResponses.map((chat) => ({
+                    id: chat.id,
+                    title: chat.title,
+                    messages: [],
+                    isTyping: false,
+                    isResponseLoading: false,
+                }));
+
+                setChats(chats);
+
+                if (chats.length > 0) setActiveChatId(chats[0].id);
+            } catch (error) {
+                console.error("Failed to load chats:", error);
+            } finally {
+                setIsLoadingChats(false);
+            }
+        }
+
+        loadUserChats();
+    }, []);
 
     useEffect(() => {
         saveActiveChatId(activeChatId);
     }, [activeChatId]);
 
-    function createNewChat(): ChatType {
-        return {
-            id: crypto.randomUUID(),
-            title: "New Chat",
-            messages: [createMessage("Hello! How can I help you today?", "assistant")],
-            isTyping: false,
-            isResponseLoading: false,
-        };
-    }
+    async function deleteChat(id: string) {
+        try {
+            await deleteChatRequest(id);
 
-    function deleteChat(id: string) {
-        const newChats = chats.filter((chat) => chat.id !== id);
+            const newChats = chats.filter((chat) => chat.id !== id);
 
-        if (newChats.length === 0) {
-            const newChat = createNewChat();
+            if (newChats.length === 0) {
+                await handleNewChat();
 
-            setChats([newChat]);
-            setActiveChatId(newChat.id);
+                return;
+            }
 
-            return;
-        }
+            setChats(newChats);
 
-        setChats(newChats);
-
-        if (id === activeChatId) {
-            setActiveChatId(newChats[newChats.length - 1].id);
+            if (id === activeChatId) {
+                setActiveChatId(newChats[0].id);
+            }
+        } catch (error) {
+            console.error("Failed to delete chat:", error);
         }
     }
 
@@ -105,11 +108,23 @@ function Home() {
         generateAssistantResponse(conversation);
     }
 
-    function handleNewChat() {
-        const newChat = createNewChat();
+    async function handleNewChat() {
+        try {
+            const chat = await createChat("New Chat");
 
-        setChats((prev) => [newChat, ...prev]);
-        setActiveChatId(newChat.id);
+            const newChat: ChatType = {
+                id: chat.id,
+                title: chat.title,
+                messages: [],
+                isTyping: false,
+                isResponseLoading: false,
+            };
+
+            setChats((prev) => [newChat, ...prev]);
+            setActiveChatId(newChat.id);
+        } catch (error) {
+            console.error("Failed to create chat:", error);
+        }
     }
 
     function retryResponse() {
@@ -128,6 +143,10 @@ function Home() {
         const conversation = createConversation(activeChat.messages);
 
         generateAssistantResponse(conversation);
+    }
+
+    if (isLoadingChats) {
+        return <div>Loading chats...</div>;
     }
 
     return (

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
@@ -11,7 +11,7 @@ export class ChatService {
 
     constructor(
         private readonly configService: ConfigService,
-        private readonly prisma: PrismaService,
+        private readonly prisma: PrismaService
     ) {
         this.ai = new GoogleGenAI({
             apiKey: this.configService.getOrThrow<string>("GEMINI_API_KEY"),
@@ -73,10 +73,32 @@ export class ChatService {
         });
     }
 
+    async deleteChat(userId: string, chatId: string) {
+        const result = await this.prisma.chat.deleteMany({
+            where: {
+                id: chatId,
+                userId,
+            },
+        });
+
+        if (result.count === 0) {
+            throw new NotFoundException("Chat not found");
+        }
+
+        return { message: "Chat deleted successfully" };
+    }
+
     async getUserChats(userId: string) {
         return this.prisma.chat.findMany({
             where: {
                 userId,
+            },
+            include: {
+                messages: {
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                },
             },
             orderBy: {
                 updatedAt: "desc",

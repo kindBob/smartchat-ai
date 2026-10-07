@@ -1,31 +1,18 @@
-import type { ConversationType } from "../types/Api";
+import { ApiError, type ChatResponse, type ConversationType } from "../types/Api";
+import { authFetch } from "./authFetch";
 
-export class ApiError extends Error {
-    statusCode: number;
-    retryAfter?: number;
+async function handleResponse<T>(response: Response): Promise<T> {
+    const data = await response.json();
 
-    constructor(message: string, statusCode: number, retryAfter?: number) {
-        super(message);
-        this.name = "ApiError";
-        this.statusCode = statusCode;
-        this.retryAfter = retryAfter;
-    }
-}
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-async function handleResponse<T>(request: Response): Promise<T> {
-    const data = await request.json();
-
-    if (!request.ok) {
-        throw new ApiError(data.message || "Request failed", data.statusCode || request.status, data.retryAfter);
+    if (!response.ok) {
+        throw new ApiError(data.message || "Request failed", data.statusCode || response.status, data.retryAfter);
     }
 
     return data;
 }
 
-export async function fetchChatTitle(message: string) {
-    const request = await fetch(`${API_URL}/chat/title`, {
+export async function fetchChatTitle(message: string): Promise<string> {
+    const request = await authFetch("/chat/title", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -42,7 +29,7 @@ export async function fetchAssistantResponse(
     conversation: ConversationType[],
     controller: AbortController
 ): Promise<string> {
-    const request = await fetch(`${API_URL}/chat`, {
+    const request = await authFetch("/chat", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -56,4 +43,32 @@ export async function fetchAssistantResponse(
     const data = await handleResponse<{ response: string }>(request);
 
     return data.response;
+}
+
+export async function createChat(title: string): Promise<ChatResponse> {
+    const request = await authFetch("/chat/create", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            title,
+        }),
+    });
+
+    return handleResponse<ChatResponse>(request);
+}
+
+export async function deleteChat(chatId: string) {
+    const request = await authFetch(`/chat/${chatId}`, {
+        method: "DELETE",
+    });
+
+    return handleResponse<{ message: string }>(request);
+}
+
+export async function fetchChats(): Promise<ChatResponse[]> {
+    const request = await authFetch("/chat");
+
+    return handleResponse<ChatResponse[]>(request);
 }

@@ -14,17 +14,11 @@ import { PrismaModule } from "./database/prisma.module.js";
         ThrottlerModule.forRoot([
             {
                 ttl: 60_000,
-                limit: 5,
+                limit: 10,
             },
         ]),
         ChatModule,
         PrismaModule,
-    ],
-    providers: [
-        {
-            provide: APP_GUARD,
-            useClass: CustomThrottlerGuard,
-        },
     ],
 })
 export class AppModule {}

@@ -1,6 +1,8 @@
 import { authClient } from "../auth";
 
-export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
+const API_URL = import.meta.env.VITE_API_URL;
+
+export async function authFetch(endpoint: string, init: RequestInit = {}): Promise<Response> {
     const result = await authClient.getSession();
 
     const token = result.data?.session?.token;
@@ -9,11 +11,13 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
         throw new Error("User is not authenticated");
     }
 
-    return fetch(input, {
+    const request = await fetch(`${API_URL}${endpoint}`, {
         ...init,
         headers: {
             ...init.headers,
             Authorization: `Bearer ${token}`,
         },
     });
+
+    return request;
 }
