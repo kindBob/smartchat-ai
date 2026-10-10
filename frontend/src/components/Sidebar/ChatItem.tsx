@@ -43,6 +43,8 @@ function ChatItem({
         function handleClickOutside(event: MouseEvent) {
             const target = event.target as Node;
 
+            if (!chatItemRef.current || !menuRef.current) return;
+
             if (!chatItemRef?.current.contains(target) && !menuRef.current.contains(target)) {
                 cancelRename();
                 onCloseActions();
