@@ -135,7 +135,12 @@ function Home({ onSignOut }: HomeProps) {
             const newChat: ChatType = {
                 id: chat.id,
                 title: chat.title,
-                messages: [],
+                messages: chat.messages.map((message) => ({
+                    id: message.id,
+                    text: message.text,
+                    sender: message.role === "USER" ? "user" : "assistant",
+                    timestamp: message.createdAt,
+                })),
                 isTyping: false,
                 isResponseLoading: false,
             };

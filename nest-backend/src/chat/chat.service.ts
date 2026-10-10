@@ -137,6 +137,15 @@ export class ChatService {
             data: {
                 userId,
                 title,
+                messages: {
+                    create: {
+                        text: "Hello, how can I help you?",
+                        role: "MODEL",
+                    },
+                },
+            },
+            include: {
+                messages: true,
             },
         });
     }
@@ -175,7 +184,7 @@ export class ChatService {
     }
 
     async getUserChats(userId: string) {
-        const chats = await this.prisma.chat.findMany({
+        let chats = await this.prisma.chat.findMany({
             where: {
                 userId,
             },
@@ -191,32 +200,53 @@ export class ChatService {
             },
         });
 
-        if (chats.length > 0) return chats;
+        if (chats.length === 0) {
+            await this.createChat(userId, "New Chat");
 
-        await this.prisma.chat.create({
-            data: {
-                userId,
-                messages: {
-                    create: {
+            chats = await this.prisma.chat.findMany({
+                where: { userId },
+                include: {
+                    messages: {
+                        orderBy: {
+                            createdAt: "asc",
+                        },
+                    },
+                },
+                orderBy: {
+                    lastMessageAt: "desc",
+                },
+            });
+
+            return chats;
+        }
+
+        for (const chat of chats) {
+            if (chat.messages.length === 0) {
+                await this.prisma.message.create({
+                    data: {
                         text: "Hello, how can I help you?",
                         role: "MODEL",
+                        chatId: chat.id,
                     },
-                },
-            },
-        });
+                });
+            }
+        }
 
-        return this.prisma.chat.findMany({
-            where: { userId },
-            include: {
-                messages: {
-                    orderBy: {
-                        createdAt: "asc",
+        if (chats.some((chat) => chat.messages.length === 0)) {
+            chats = await this.prisma.chat.findMany({
+                where: { userId },
+                include: {
+                    messages: {
+                        orderBy: { createdAt: "asc" },
                     },
                 },
-            },
-            orderBy: {
-                lastMessageAt: "desc",
-            },
-        });
+
+                orderBy: {
+                    lastMessageAt: "desc",
+                },
+            });
+        }
+
+        return chats;
     }
 }
