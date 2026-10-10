@@ -1,7 +1,7 @@
 import type { ChatType } from "../../types/Chat";
-import "./Sidebar.scss";
 import ChatItem from "./ChatItem";
 import { useCallback, useState } from "react";
+import "./Sidebar.scss";
 
 type SidebarProps = {
     chats: ChatType[];
