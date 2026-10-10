@@ -6,7 +6,12 @@ import { createConversation, createMessage } from "../utils/conversation";
 import { SquareMenu } from "lucide-react";
 import { useChatGeneration } from "../hooks/useChatGeneration";
 import "./Home.scss";
-import { createChat, fetchChats, deleteChat as deleteChatRequest, updateChat } from "../api/chatApi";
+import {
+    createChat,
+    fetchChats,
+    deleteChat as deleteChatRequest,
+    renameChat as renameChatRequest,
+} from "../api/chatApi";
 import { saveActiveChatId } from "../utils/chatStorage";
 
 type HomeProps = {
@@ -84,7 +89,8 @@ function Home({ onSignOut }: HomeProps) {
         try {
             setChats((prev) => prev.map((chat) => (chat.id === id ? { ...chat, title: newTitle } : chat)));
 
-            await updateChat(id, newTitle);
+            const response = await renameChatRequest(id, newTitle);
+            console.log(response);
         } catch (error) {
             console.error("Failed to rename chat:", error);
         }

@@ -54,6 +54,15 @@ export class ChatService {
                         chatId,
                     },
                 });
+
+                await this.prisma.chat.update({
+                    where: {
+                        id: chatId,
+                    },
+                    data: {
+                        lastMessageAt: new Date(),
+                    },
+                });
             }
 
             await this.prisma.message.create({
@@ -147,7 +156,7 @@ export class ChatService {
         return { message: "Chat deleted successfully" };
     }
 
-    async updateChat(userId: string, chatId: string, title: string) {
+    async renameChat(userId: string, chatId: string, title: string) {
         const result = await this.prisma.chat.updateMany({
             where: {
                 id: chatId,
@@ -178,7 +187,7 @@ export class ChatService {
                 },
             },
             orderBy: {
-                updatedAt: "desc",
+                lastMessageAt: "desc",
             },
         });
 
@@ -187,7 +196,12 @@ export class ChatService {
         await this.prisma.chat.create({
             data: {
                 userId,
-                title: "New Chat",
+                messages: {
+                    create: {
+                        text: "Hello, how can I help you?",
+                        role: "MODEL",
+                    },
+                },
             },
         });
 
@@ -201,7 +215,7 @@ export class ChatService {
                 },
             },
             orderBy: {
-                updatedAt: "desc",
+                lastMessageAt: "desc",
             },
         });
     }

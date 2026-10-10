@@ -28,6 +28,7 @@ function ChatItem({
 
     const inputRef = useRef<HTMLInputElement>(null);
     const chatItemRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isRenaming) {
@@ -40,7 +41,9 @@ function ChatItem({
         if (!isRenaming && !actionsOpened) return;
 
         function handleClickOutside(event: MouseEvent) {
-            if (chatItemRef.current && !chatItemRef.current.contains(event.target as Node)) {
+            const target = event.target as Node;
+
+            if (!chatItemRef?.current.contains(target) && !menuRef.current.contains(target)) {
                 cancelRename();
                 onCloseActions();
             }
@@ -105,6 +108,7 @@ function ChatItem({
             )}
 
             <ChatItemActions
+                menuRef={menuRef}
                 onRename={() => (!isRenaming ? setIsRenaming(true) : handleRename())}
                 onDelete={() => {
                     onDeleteChat(chat.id);

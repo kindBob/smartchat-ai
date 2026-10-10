@@ -1,5 +1,65 @@
 $accent-color: #a5b68d;
 
+.sidebar__chat-actions {
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: fit-content;
+    max-width: 30%;
+}
+
+.sidebar__chat-actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    position: fixed;
+    width: max-content;
+    min-width: 140px;
+
+    z-index: 1000;
+
+    background: #2f2f2f;
+    border: 1px solid #414141;
+    border-radius: 10px;
+    padding: 8px;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+    button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        width: 100%;
+        padding: 10px 12px;
+
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+
+        color: #fff;
+        font-size: 14px;
+        text-align: left;
+
+        transition: background-color 0.15s ease;
+
+        &:hover {
+            background-color: #414141;
+        }
+    }
+
+    .sidebar__chat-delete {
+        background-color: rgba(88, 47, 47, 0.395) !important;
+        color: rgb(255, 43, 43) !important;
+
+        &:hover {
+            background-color: rgba(122, 53, 53, 0.5) !important;
+        }
+    }
+}
+
 .sidebar {
     width: 280px;
     min-width: 240px;
@@ -35,7 +95,9 @@ $accent-color: #a5b68d;
 
     &__chats {
         flex: 1;
+        min-height: 0;
         overflow-y: scroll;
+        overflow-x: hidden;
     }
 
     &__chat {
@@ -94,73 +156,40 @@ $accent-color: #a5b68d;
             border-bottom: 1px solid #454545;
         }
 
-        &-actions {
-            flex-shrink: 0;
-            position: relative;
+        &-rename,
+        &-delete {
             display: flex;
-            flex-direction: column;
-            min-width: fit-content;
-            max-width: 30%;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
 
-            &-container {
-                display: flex;
-                flex-direction: column;
-                gap: 0.75rem;
-                position: absolute;
-                width: max-content;
-                left: 50%;
-                bottom: -300%;
-                transform: translateX(-50%);
-                z-index: 10;
-                background: #2f2f2f;
-                border-radius: 10px;
-                padding: 10px;
-
-                button {
-                    border-radius: 0;
-                    transition: 0.15s ease;
-                    border-radius: 15px;
-
-                    &:hover {
-                        background-color: #353535;
-                    }
-                }
+            svg {
+                width: 23px;
+                height: 23px;
             }
+        }
 
-            &-rename,
-            &-delete {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
+        &-delete {
+            background-color: rgba(88, 47, 47, 0.395) !important;
+            color: rgb(255, 43, 43) !important;
 
-                svg {
-                    width: 23px;
-                    height: 23px;
-                }
+            svg {
+                color: red;
             }
+        }
 
-            &-delete {
-                background-color: rgba(88, 47, 47, 0.395) !important;
-                color: rgb(255, 43, 43) !important;
+        &-delete:hover {
+            background-color: rgba(122, 53, 53, 0.395) !important;
+        }
 
-                svg {
-                    color: red;
-                }
-            }
+        &-open {
+            display: flex;
+            place-content: center;
 
-            &-delete:hover {
-                background-color: rgba(122, 53, 53, 0.395) !important;
-            }
-
-            &-open {
-                display: flex;
-                place-content: center;
-
-                svg {
-                    height: 25px;
-                    width: 25px;
-                }
+            svg {
+                height: 25px;
+                width: 25px;
             }
         }
     }
@@ -169,11 +198,12 @@ $accent-color: #a5b68d;
         height: fit-content;
         flex-shrink: 0;
         margin-top: auto;
-        padding: 16px;
+        padding: 16px 0;
         border-top: 1px solid #e8e8e2;
     }
 
     &-user {
+        padding: 0 0.9rem;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -219,28 +249,6 @@ $accent-color: #a5b68d;
 
     &-sign-out {
         width: 100%;
-        padding: 9px 12px;
-
-        border: 1px solid #e2e2dc;
-        border-radius: 8px;
-
-        background: transparent;
-        color: #666b61 !important;
-
-        font-size: 13px;
-        font-weight: 500;
-
-        cursor: pointer;
-        transition:
-            background 0.2s ease,
-            color 0.2s ease,
-            border-color 0.2s ease;
-    }
-
-    &-sign-out:hover {
-        background: #f5f5f0 !important;
-        border-color: #d5d8ce;
-        color: #3d4238 !important;
     }
 }
 

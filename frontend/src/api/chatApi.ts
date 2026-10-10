@@ -69,7 +69,7 @@ export async function deleteChat(chatId: string) {
     return handleResponse<{ message: string }>(request);
 }
 
-export async function updateChat(chatId: string, title: string) {
+export async function renameChat(chatId: string, title: string) {
     const request = await authFetch(`/chat/${chatId}`, {
         method: "PATCH",
         headers: {

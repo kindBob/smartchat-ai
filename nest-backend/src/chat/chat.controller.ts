@@ -47,7 +47,7 @@ export class ChatController {
         @Param("id") chatId: string,
         @Body() dto: UpdateChatDto
     ) {
-        return this.chatService.updateChat(request.user.id, chatId, dto.title);
+        return this.chatService.renameChat(request.user.id, chatId, dto.title);
     }
 
     @UseGuards(AuthGuard, CustomThrottlerGuard)
