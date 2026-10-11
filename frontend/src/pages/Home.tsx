@@ -157,6 +157,8 @@ function Home({ user, onSignOut }: HomeProps) {
                 isResponseLoading: false,
             };
 
+            setIsSidebarOpen(false);
+
             return newChat;
         } catch (error) {
             console.error("Failed to create chat:", error);
@@ -183,17 +185,15 @@ function Home({ user, onSignOut }: HomeProps) {
     }
 
     if (isLoadingChats) {
-        if (isLoadingChats) {
-            return (
-                <main className="home-loading">
-                    <div className="loading-logo">S</div>
+        return (
+            <main className="home-loading">
+                <div className="loading-logo">S</div>
 
-                    <div className="loading-spinner" />
+                <div className="loading-spinner" />
 
-                    <p>Loading your chats...</p>
-                </main>
-            );
-        }
+                <p>Loading your chats...</p>
+            </main>
+        );
     }
 
     return (

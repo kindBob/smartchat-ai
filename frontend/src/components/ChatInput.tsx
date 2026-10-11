@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Square } from "lucide-react";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 type ChatInputProps = {
     onSend: (text: string) => void;
@@ -11,8 +12,9 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
     const [message, setMessage] = useState("");
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
     const MAX_TEXTAREA_HEIGHT = 120;
+
+    const isMobile = useIsMobile();
 
     function resizeTextArea() {
         const textarea = textareaRef.current;
@@ -43,6 +45,8 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key !== "Enter") return;
+
+                    if (isMobile) return;
 
                     if (e.shiftKey) return;
 

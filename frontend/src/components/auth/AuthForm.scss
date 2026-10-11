@@ -1,7 +1,7 @@
 $accent-color: #a5b68d;
 
 .auth-page {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,7 +87,7 @@ $accent-color: #a5b68d;
         color: #252a20;
 
         font-family: inherit;
-        font-size: 14px;
+        font-size: 16px;
 
         transition: 0.2s ease;
 
