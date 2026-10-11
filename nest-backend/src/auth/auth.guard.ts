@@ -34,25 +34,33 @@ export class AuthGuard implements CanActivate {
             throw new UnauthorizedException("Invalid authorization header");
         }
 
+        let payload;
+
         try {
-            const { payload } = await jwtVerify(token, this.jwks, {
+            const result = await jwtVerify(token, this.jwks, {
                 issuer: this.issuer,
             });
 
-            if (typeof payload.sub !== "string" || typeof payload.email !== "string") {
-                throw new UnauthorizedException("Invalid token payload");
-            }
-
-            request.user = {
-                id: payload.sub,
-                email: payload.email,
-            };
-
-            return true;
+            payload = result.payload;
         } catch (error) {
             console.error("JWT verification error:", error);
 
             throw new UnauthorizedException("Invalid or expired token");
         }
+
+        if (typeof payload.sub !== "string" || !payload.sub) {
+            throw new UnauthorizedException("Invalid token payload");
+        }
+
+        if (typeof payload.email !== "string" || !payload.email) {
+            throw new UnauthorizedException("Invalid token payload");
+        }
+
+        request.user = {
+            id: payload.sub,
+            email: payload.email,
+        };
+
+        return true;
     }
 }

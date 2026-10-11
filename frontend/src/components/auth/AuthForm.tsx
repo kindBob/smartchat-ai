@@ -60,21 +60,19 @@ function AuthForm({ onAuthSuccess }: AuthFormProps) {
 
             if (result.error) {
                 setError(result.error.message || "Authentication failed.");
+                return;
             }
 
             await onAuthSuccess();
         } catch (err) {
             console.error("Authentication error:", err);
 
-            let error = err.message;
+            const message =
+                err instanceof Error
+                    ? err.message || "Something went wrong. Please try again."
+                    : "Something went wrong. Please try again.";
 
-            if (error[error.length - 1] !== ".") error += ".";
-
-            if (err instanceof Error) {
-                setError(error);
-            } else {
-                setError("Something went wrong. Please try again.");
-            }
+            setError(message.endsWith(".") ? message : message + ".");
         } finally {
             setLoading(false);
         }
@@ -85,7 +83,6 @@ function AuthForm({ onAuthSuccess }: AuthFormProps) {
 
         setIsSignUp((prev) => !prev);
         setError(null);
-        setPassword("");
     }
 
     return (

@@ -8,17 +8,16 @@ import { AuthGuard } from "../auth/auth.guard.js";
 import { CustomThrottlerGuard } from "../common/guards/custom-throttler.guard.js";
 import { UpdateChatDto } from "./dto/update-chat.dto.js";
 
+@UseGuards(AuthGuard)
 @Controller("chat")
 export class ChatController {
     constructor(private readonly chatService: ChatService) {}
 
-    @UseGuards(AuthGuard)
     @Get()
     async getUserChats(@Request() request: AuthenticatedRequest) {
         return this.chatService.getUserChats(request.user.id);
     }
 
-    @UseGuards(AuthGuard)
     @Post("title")
     async generateTitle(@Request() request: AuthenticatedRequest, @Body() dto: GenerateTitleDto) {
         const title = await this.chatService.generateTitle(request.user.id, dto.chatId, dto.message);
@@ -28,19 +27,16 @@ export class ChatController {
         };
     }
 
-    @UseGuards(AuthGuard)
     @Post("create")
     async createChat(@Request() request: AuthenticatedRequest, @Body() dto: CreateChatDto) {
         return this.chatService.createChat(request.user.id, dto.title);
     }
 
-    @UseGuards(AuthGuard)
     @Delete(":id")
     async deleteChat(@Request() request: AuthenticatedRequest, @Param("id") chatId: string) {
         return this.chatService.deleteChat(request.user.id, chatId);
     }
 
-    @UseGuards(AuthGuard)
     @Patch(":id")
     async updateChat(
         @Request() request: AuthenticatedRequest,
@@ -50,7 +46,7 @@ export class ChatController {
         return this.chatService.renameChat(request.user.id, chatId, dto.title);
     }
 
-    @UseGuards(AuthGuard, CustomThrottlerGuard)
+    @UseGuards(CustomThrottlerGuard)
     @Post()
     async generateResponse(@Request() request: AuthenticatedRequest, @Body() dto: SendMessageDto) {
         const response = await this.chatService.generateResponse(request.user.id, dto.chatId, dto.messages);
