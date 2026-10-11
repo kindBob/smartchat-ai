@@ -7,6 +7,7 @@ type SidebarProps = {
     chats: ChatType[];
     activeChatId: string | null;
     isOpen: boolean;
+    userName: string;
     onSelectChat: (id: string) => void;
     onNewChat: () => void;
     onDeleteChat: (id: string) => void;
@@ -19,6 +20,7 @@ function Sidebar({
     chats,
     activeChatId,
     isOpen,
+    userName,
     onClose,
     onSelectChat,
     onNewChat,
@@ -63,10 +65,10 @@ function Sidebar({
 
                 <div className="sidebar-account">
                     <div className="sidebar-user">
-                        <div className="sidebar-avatar">S</div>
+                        <div className="sidebar-avatar">{userName.charAt(0).toUpperCase()}</div>
 
                         <div className="sidebar-user-info">
-                            <span className="sidebar-user-name">SmartChat User</span>
+                            <span className="sidebar-user-name">{userName}</span>
                             <span className="sidebar-user-status">Online</span>
                         </div>
                     </div>

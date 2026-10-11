@@ -12,13 +12,17 @@ import {
     deleteChat as deleteChatRequest,
     renameChat as renameChatRequest,
 } from "../api/chatApi";
-import { saveActiveChatId } from "../utils/chatStorage";
+import { loadActiveChatId, saveActiveChatId } from "../utils/chatStorage";
+import type { authClient } from "../auth";
+
+type AuthUser = typeof authClient.$Infer.Session.user;
 
 type HomeProps = {
+    user: AuthUser;
     onSignOut: () => Promise<void>;
 };
 
-function Home({ onSignOut }: HomeProps) {
+function Home({ user, onSignOut }: HomeProps) {
     const [chats, setChats] = useState<ChatType[]>([]);
     const [isLoadingChats, setIsLoadingChats] = useState(true);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -48,7 +52,16 @@ function Home({ onSignOut }: HomeProps) {
                 }));
 
                 setChats(loadedChats);
-                setActiveChatId(loadedChats[0].id);
+
+                const loadedActiveChatId = loadActiveChatId();
+
+                if (loadedActiveChatId && loadedChats.some((chat) => chat.id === loadedActiveChatId)) {
+                    setActiveChatId(loadedActiveChatId);
+                } else if (loadedChats.length > 0) {
+                    setActiveChatId(loadedChats[0].id);
+                } else {
+                    setActiveChatId(null);
+                }
             } catch (error) {
                 console.error("Failed to load chats:", error);
             } finally {
@@ -89,8 +102,7 @@ function Home({ onSignOut }: HomeProps) {
         try {
             setChats((prev) => prev.map((chat) => (chat.id === id ? { ...chat, title: newTitle } : chat)));
 
-            const response = await renameChatRequest(id, newTitle);
-            console.log(response);
+            await renameChatRequest(id, newTitle);
         } catch (error) {
             console.error("Failed to rename chat:", error);
         }
@@ -190,6 +202,7 @@ function Home({ onSignOut }: HomeProps) {
                 <SquareMenu />
             </button>
             <Sidebar
+                userName={user.name || user.email || "User"}
                 chats={chats}
                 onNewChat={async () => {
                     const newChat = await handleNewChat();

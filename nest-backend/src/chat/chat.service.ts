@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
@@ -46,6 +46,10 @@ export class ChatService {
 
             if (lastMessage?.role === "user") {
                 const userText = lastMessage.parts[0]?.text;
+
+                if (!userText) {
+                    throw new BadRequestException("Message text is required");
+                }
 
                 await this.prisma.message.create({
                     data: {
@@ -113,14 +117,17 @@ export class ChatService {
                 throw new Error("Empty title returned");
             }
 
-            await this.prisma.chat.updateMany({
+            const result = await this.prisma.chat.updateMany({
                 where: {
                     id: chatId,
+                    userId,
                 },
                 data: {
                     title,
                 },
             });
+
+            if (result.count === 0) throw new NotFoundException("Chat not found");
 
             return title;
         } catch (error) {

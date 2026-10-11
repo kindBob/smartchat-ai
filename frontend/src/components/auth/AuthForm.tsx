@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { authClient } from "../../auth";
-import "./AuthForm.scss";
 import { Eye, EyeOff } from "lucide-react";
+import "./AuthForm.scss";
 
 type AuthFormProps = {
     onAuthSuccess: () => Promise<void>;
@@ -47,7 +47,7 @@ function AuthForm({ onAuthSuccess }: AuthFormProps) {
         setLoading(true);
 
         try {
-            isSignUp
+            const result = isSignUp
                 ? await authClient.signUp.email({
                       name: normalizedEmail.split("@")[0] || "User",
                       email: normalizedEmail,
@@ -58,12 +58,20 @@ function AuthForm({ onAuthSuccess }: AuthFormProps) {
                       password,
                   });
 
+            if (result.error) {
+                setError(result.error.message || "Authentication failed.");
+            }
+
             await onAuthSuccess();
         } catch (err) {
             console.error("Authentication error:", err);
 
+            let error = err.message;
+
+            if (error[error.length - 1] !== ".") error += ".";
+
             if (err instanceof Error) {
-                setError(err.message);
+                setError(error);
             } else {
                 setError("Something went wrong. Please try again.");
             }
@@ -144,7 +152,7 @@ function AuthForm({ onAuthSuccess }: AuthFormProps) {
                                 aria-label={passwordVisible ? "Hide password" : "Show password"}
                                 aria-pressed={passwordVisible}
                                 disabled={loading}>
-                                {passwordVisible ? <EyeOff /> : <Eye />}
+                                {passwordVisible ? <Eye /> : <EyeOff />}
                             </button>
                         </div>
                     </div>

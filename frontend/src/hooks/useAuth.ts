@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { authClient } from "../auth";
 
+type AuthUser = typeof authClient.$Infer.Session.user;
+
 export function useAuth() {
     const [session, setSession] = useState<unknown>(null);
-    const [user, setUser] = useState<unknown>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
     const [loading, setLoading] = useState(true);
 
     const refreshSession = useCallback(async () => {

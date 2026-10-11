@@ -13,11 +13,7 @@ function App() {
         return <AuthForm onAuthSuccess={refreshSession} />;
     }
 
-    return (
-        <>
-            <Home onSignOut={signOut} />
-        </>
-    );
+    return <Home user={user} onSignOut={signOut} />;
 }
 
 export default App;
