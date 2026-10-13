@@ -6,8 +6,8 @@ $border-color: rgba(0, 0, 0, 0.12);
 .markdown {
     min-width: 0;
 
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: inherit;
+    line-height: inherit;
     color: $text-color;
 
     white-space: normal;
@@ -39,6 +39,24 @@ $border-color: rgba(0, 0, 0, 0.12);
         &:hover {
             opacity: 1;
         }
+    }
+
+    .katex {
+        font-size: 1.05em; // KaTeX renders slightly small next to 16px body text
+    }
+
+    // let the scroll container size to the bubble, not the equation
+    .katex-display > .katex {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .katex-display {
+        display: block;
+        margin: 0.8em 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0 0 5px;
     }
 
     hr {
@@ -218,6 +236,17 @@ $border-color: rgba(0, 0, 0, 0.12);
         code.hljs {
             padding: 15px 0;
             background: transparent;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .markdown {
+        font-size: 15px;
+        line-height: 1.55;
+
+        pre code {
+            font-size: 13px;
         }
     }
 }
