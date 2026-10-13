@@ -47,7 +47,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
                         isResponseLoading: false,
                         messages: [...chat.messages, assistantMessage],
                     };
-                })
+                }),
             );
 
             startTypingAnimation(assistantMessage, aiResponse, currentChatId);
@@ -72,7 +72,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
                             isResponseLoading: false,
                             error: chatErrorMessage,
                         };
-                    })
+                    }),
                 );
 
                 return;
@@ -90,7 +90,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
                         isResponseLoading: false,
                         error: "Sorry, something went wrong.",
                     };
-                })
+                }),
             );
         } finally {
             if (abortControllerRef.current === controller) abortControllerRef.current = null;
@@ -115,7 +115,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
                             ...chat,
                             isTyping: false,
                         };
-                    })
+                    }),
                 );
 
                 return;
@@ -138,11 +138,11 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
                             };
                         }),
                     };
-                })
+                }),
             );
 
             index++;
-        }, 30);
+        }, 10);
     }
 
     function stopTyping() {
@@ -161,7 +161,7 @@ export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationP
                     isTyping: false,
                     isResponseLoading: false,
                 };
-            })
+            }),
         );
     }
 

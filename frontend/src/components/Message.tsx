@@ -1,4 +1,5 @@
 import type { MessageType } from "../types/Chat";
+import Markdown from "./markdown/Markdown";
 
 const timeFormatter = new Intl.DateTimeFormat([], {
     hour: "2-digit",
@@ -12,7 +13,7 @@ function formatMessageTime(timestamp: string) {
 function Message({ text, sender, timestamp }: MessageType) {
     return (
         <div className={`message ${sender === "user" ? "message--user" : "message--assistant"}`}>
-            <p className="message__text">{text}</p>
+            {sender === "assistant" ? <Markdown content={text} /> : <p className="message__text">{text}</p>}
 
             <span className="message__time">{formatMessageTime(timestamp)}</span>
         </div>
