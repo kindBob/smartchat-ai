@@ -107,6 +107,17 @@ $accent-color: #a5b68d;
     }
 }
 
+.auth-success {
+    padding: 12px 14px;
+    border: 1px solid #a5b68d;
+    border-radius: 8px;
+    background: rgba(165, 182, 141, 0.15);
+    color: #526442;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
 .auth-error {
     width: fit-content;
     max-width: min(700px, calc(100% - 40px));
@@ -220,7 +231,14 @@ $accent-color: #a5b68d;
     color: #7b8174;
     font-size: 13px;
 
+    &.--vertical {
+        flex-direction: column;
+    }
+
     button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         padding: 0;
         border: none;
         background: transparent;
