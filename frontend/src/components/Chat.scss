@@ -197,7 +197,7 @@ $send-button-width: 40px;
     width: fit-content;
     max-width: min(75%, 700px);
 
-    padding: 11px 15px;
+    padding: 12px 15px;
 
     border-radius: 16px;
 
@@ -394,7 +394,7 @@ $send-button-width: 40px;
 
 @media (max-width: 400px) {
     .message {
-        max-width: 100%;
+        max-width: 97%;
     }
 
     .message-list {

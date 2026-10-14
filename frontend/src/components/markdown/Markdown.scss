@@ -168,6 +168,57 @@ $border-color: rgba(0, 0, 0, 0.12);
         max-width: 100%;
         border-radius: 8px;
     }
+
+    // Definition lists
+    dl {
+        margin: 0.8em 0;
+    }
+
+    dt {
+        margin-top: 0.6em;
+        font-weight: 650;
+    }
+
+    dd {
+        margin: 0.15em 0 0 1.2em;
+        color: rgba($text-color, 0.8);
+    }
+
+    // Alignment attribute (browsers support it on <p>, but this also covers <div>)
+    [align="center"] {
+        text-align: center;
+    }
+    [align="right"] {
+        text-align: right;
+    }
+
+    // Collapsible sections
+    details {
+        margin: 0.8em 0;
+        padding: 8px 12px;
+
+        border: 1px solid $border-color;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.025);
+
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            user-select: none;
+
+            &:hover {
+                color: $accent-dark;
+            }
+        }
+
+        &[open] > summary {
+            margin-bottom: 0.5em;
+        }
+
+        > :last-child {
+            margin-bottom: 0;
+        }
+    }
 }
 
 .code-block {
