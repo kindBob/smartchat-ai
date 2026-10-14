@@ -25,10 +25,13 @@ function CredentialsForm({
     onStartVerification,
     onAuthSuccess,
 }: CredentialsFormProps) {
-    const [passwordVisible, setPasswordVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [name, setName] = useState("");
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -55,9 +58,16 @@ function CredentialsForm({
             return;
         }
 
-        if (view === "sign-up" && password.length < 8) {
-            setError("Your password must contain at least 8 characters.");
-            return;
+        if (view === "sign-up") {
+            if (password.length < 8) {
+                setError("Your password must contain at least 8 characters.");
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                setError("Passwords don't match.");
+                return;
+            }
         }
 
         setLoading(true);
@@ -65,7 +75,7 @@ function CredentialsForm({
         try {
             if (view === "sign-up") {
                 const result = await authClient.signUp.email({
-                    name: normalizedEmail.split("@")[0] || "User",
+                    name,
                     email: normalizedEmail,
                     password,
                 });
@@ -137,6 +147,27 @@ function CredentialsForm({
 
                 <form className="auth-form" onSubmit={handleSubmit} noValidate>
                     <AuthMessages error={error} success={success} />
+                    {view === "sign-up" && (
+                        <div className="form-field">
+                            <label htmlFor="name">Name</label>
+
+                            <input
+                                id="name"
+                                type="text"
+                                placeholder="John"
+                                value={name}
+                                onChange={(e) => {
+                                    setName(e.target.value);
+                                    setError(null);
+                                }}
+                                autoComplete="name"
+                                autoCapitalize="words"
+                                spellCheck={false}
+                                required
+                                disabled={loading}
+                            />
+                        </div>
+                    )}
 
                     <div className="form-field">
                         <label htmlFor="email">Email</label>
@@ -165,7 +196,7 @@ function CredentialsForm({
                             <input
                                 id="password"
                                 type={passwordVisible ? "text" : "password"}
-                                placeholder="Enter your password"
+                                placeholder="********"
                                 value={password}
                                 onChange={(e) => {
                                     onPasswordChange(e.target.value);
@@ -188,6 +219,39 @@ function CredentialsForm({
                             </button>
                         </div>
                     </div>
+
+                    {view === "sign-up" && (
+                        <div className="form-field">
+                            <label htmlFor="confirm-password">Confirm Password</label>
+
+                            <div className="password-input-wrapper">
+                                <input
+                                    id="confirm-password"
+                                    type={confirmPasswordVisible ? "text" : "password"}
+                                    placeholder="********"
+                                    value={confirmPassword}
+                                    onChange={(e) => {
+                                        setConfirmPassword(e.target.value);
+                                        setError(null);
+                                    }}
+                                    autoComplete={"new-password"}
+                                    required
+                                    minLength={8}
+                                    disabled={loading}
+                                />
+
+                                <button
+                                    className="show-password"
+                                    type="button"
+                                    onClick={() => setConfirmPasswordVisible((prev) => !prev)}
+                                    aria-label={confirmPasswordVisible ? "Hide password" : "Show password"}
+                                    aria-pressed={confirmPasswordVisible}
+                                    disabled={loading}>
+                                    {confirmPasswordVisible ? <Eye /> : <EyeOff />}
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <button className="auth-submit" type="submit" disabled={loading}>
                         {loading ? "Please wait..." : view === "sign-up" ? "Create account" : "Sign in"}

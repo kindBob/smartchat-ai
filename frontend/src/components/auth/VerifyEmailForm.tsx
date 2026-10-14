@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useState } from "react";
 import { getErrorMessage, sendVerificationCode } from "../../utils/authHelpers";
 import { authClient } from "../../auth";
@@ -9,9 +9,10 @@ type VerifyEmailFormProps = {
     password: string;
     onAuthSuccess: () => Promise<void>;
     onBackToAuth: () => void;
+    onBack: () => void;
 };
 
-function VerifyEmailForm({ email, password, onAuthSuccess, onBackToAuth }: VerifyEmailFormProps) {
+function VerifyEmailForm({ email, password, onAuthSuccess, onBackToAuth, onBack }: VerifyEmailFormProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -99,6 +100,10 @@ function VerifyEmailForm({ email, password, onAuthSuccess, onBackToAuth }: Verif
         <main className="auth-page">
             <div className="auth-card">
                 <div className="auth-header">
+                    <button type="button" onClick={onBack} className="close" disabled={loading}>
+                        <X size={24} />
+                    </button>
+
                     <div className="auth-logo">S</div>
 
                     <h1>Verify your email</h1>
