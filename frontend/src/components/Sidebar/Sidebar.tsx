@@ -1,6 +1,6 @@
 import type { ChatType } from "../../types/Chat";
 import ChatItem from "./ChatItem";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./Sidebar.scss";
 
 type SidebarProps = {
@@ -12,6 +12,7 @@ type SidebarProps = {
     onNewChat: () => void;
     onDeleteChat: (id: string) => void;
     onRenameChat: (id: string, newTitle: string) => void;
+    onPinChat: (id: string) => void;
     onSignOut: () => Promise<void>;
     onClose: () => void;
 };
@@ -27,12 +28,39 @@ function Sidebar({
     onDeleteChat,
     onSignOut,
     onRenameChat,
+    onPinChat,
 }: SidebarProps) {
     const [openedActionsChatId, setOpenedActionsChatId] = useState<string | null>(null);
+
+    const pinnedChats = chats.filter((c) => c.pinnedAt).sort((a, b) => b.pinnedAt!.localeCompare(a.pinnedAt!));
+
+    const recentChats = chats.filter((c) => !c.pinnedAt).sort((a, b) => b.lastMessageAt.localeCompare(a.lastMessageAt));
 
     const closeActions = useCallback(() => {
         setOpenedActionsChatId(null);
     }, []);
+
+    function renderChat(chat: ChatType) {
+        return (
+            <ChatItem
+                key={chat.id}
+                chat={chat}
+                isActive={chat.id === activeChatId}
+                onSelectChat={(id: string) => {
+                    setOpenedActionsChatId(null);
+                    onSelectChat(id);
+                }}
+                onDeleteChat={onDeleteChat}
+                onRenameChat={onRenameChat}
+                onPinChat={onPinChat}
+                actionsOpened={openedActionsChatId === chat.id}
+                onToggleActions={() => {
+                    setOpenedActionsChatId((currentId) => (currentId === chat.id ? null : chat.id));
+                }}
+                onCloseActions={closeActions}
+            />
+        );
+    }
 
     return (
         <>
@@ -43,24 +71,19 @@ function Sidebar({
                 </button>
 
                 <div className="sidebar__chats">
-                    {chats.map((chat) => (
-                        <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === activeChatId}
-                            onSelectChat={(id: string) => {
-                                setOpenedActionsChatId(null);
-                                onSelectChat(id);
-                            }}
-                            onDeleteChat={onDeleteChat}
-                            onRenameChat={onRenameChat}
-                            actionsOpened={openedActionsChatId === chat.id}
-                            onToggleActions={() => {
-                                setOpenedActionsChatId((currentId) => (currentId === chat.id ? null : chat.id));
-                            }}
-                            onCloseActions={closeActions}
-                        />
-                    ))}
+                    {pinnedChats.length !== 0 && (
+                        <div className="sidebar__section --pinned">
+                            <p className="sidebar__section-title">Pinned</p>
+                            {pinnedChats.map((chat) => renderChat(chat))}
+                        </div>
+                    )}
+
+                    {recentChats.length !== 0 && (
+                        <div className="sidebar__section --recent">
+                            <p className="sidebar__section-title">Recent</p>
+                            {recentChats.map((chat) => renderChat(chat))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="sidebar-account">

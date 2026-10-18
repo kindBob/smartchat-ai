@@ -20,10 +20,6 @@ export class MessageDto {
 }
 
 export class SendMessageDto {
-    @IsString()
-    @IsNotEmpty()
-    chatId: string;
-
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => MessageDto)

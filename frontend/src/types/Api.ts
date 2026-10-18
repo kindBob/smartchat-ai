@@ -25,6 +25,8 @@ export type ChatResponse = {
     userId: string;
     createdAt: string;
     updatedAt: string;
+    pinnedAt: string | null;
+    lastMessageAt: string;
     messages: {
         id: string;
         text: string;

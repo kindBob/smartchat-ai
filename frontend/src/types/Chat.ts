@@ -8,8 +8,10 @@ export type MessageType = {
 export type ChatType = {
     id: string;
     title: string;
-    messages: MessageType[];
+    pinnedAt: string | null;
+    lastMessageAt: string;
     isTyping: boolean;
     isResponseLoading: boolean;
     error?: string;
+    messages: MessageType[];
 };

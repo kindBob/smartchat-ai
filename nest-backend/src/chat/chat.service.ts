@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
 import { PrismaService } from "../database/prisma.service.js";
+import { UpdateChatDto } from "./dto/update-chat.dto.js";
 
 @Injectable()
 export class ChatService {
@@ -11,7 +12,7 @@ export class ChatService {
 
     constructor(
         private readonly configService: ConfigService,
-        private readonly prisma: PrismaService
+        private readonly prisma: PrismaService,
     ) {
         this.ai = new GoogleGenAI({
             apiKey: this.configService.getOrThrow<string>("GEMINI_API_KEY"),
@@ -169,25 +170,35 @@ export class ChatService {
             throw new NotFoundException("Chat not found");
         }
 
-        return { message: "Chat deleted successfully" };
+        return this.prisma.chat.findFirst({ where: { id: chatId, userId } });
     }
 
-    async renameChat(userId: string, chatId: string, title: string) {
+    async updateChat(userId: string, chatId: string, dto: UpdateChatDto) {
         const result = await this.prisma.chat.updateMany({
             where: {
                 id: chatId,
                 userId,
             },
             data: {
-                title,
+                ...(dto.title !== undefined && { title: dto.title }),
+                ...(dto.pinned !== undefined && { pinnedAt: dto.pinned ? new Date() : null }),
             },
         });
 
-        if (result.count === 0) throw new NotFoundException("Chat not found");
+        return this.prisma.chat.findFirst({ where: { id: chatId, userId } });
+    }
 
-        return {
-            message: "Chat updated successfully",
-        };
+    async togglePinChat(userId: string, chatId: string, pinned: boolean) {
+        const result = await this.prisma.chat.updateMany({
+            where: { id: chatId, userId },
+            data: { pinnedAt: pinned ? new Date() : null },
+        });
+
+        if (result.count === 0) {
+            throw new NotFoundException("Chat not found");
+        }
+
+        return this.prisma.chat.findFirst({ where: { id: chatId, userId } });
     }
 
     async getUserChats(userId: string) {
@@ -202,9 +213,7 @@ export class ChatService {
                     },
                 },
             },
-            orderBy: {
-                lastMessageAt: "desc",
-            },
+            orderBy: [{ pinnedAt: { sort: "desc", nulls: "last" } }, { lastMessageAt: "desc" }],
         });
 
         if (chats.length === 0) {

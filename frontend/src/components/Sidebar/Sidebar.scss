@@ -1,79 +1,22 @@
 $accent-color: #a5b68d;
 
-.sidebar__chat-actions {
-    flex-shrink: 0;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: fit-content;
-    max-width: 30%;
-}
-
-.sidebar__chat-actions-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-
-    position: fixed;
-    width: max-content;
-    min-width: 140px;
-
-    z-index: 1000;
-
-    background: #2f2f2f;
-    border: 1px solid #414141;
-    border-radius: 10px;
-    padding: 8px;
-
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-
-    button {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-
-        width: 100%;
-        padding: 10px 12px;
-
-        border: none;
-        border-radius: 8px;
-        background: transparent;
-
-        color: #fff;
-        font-size: 14px;
-        text-align: left;
-
-        transition: background-color 0.15s ease;
-
-        &:hover {
-            background-color: #414141;
-        }
-    }
-
-    .sidebar__chat-delete {
-        background-color: rgba(88, 47, 47, 0.395) !important;
-        color: rgb(255, 43, 43) !important;
-
-        &:hover {
-            background-color: rgba(122, 53, 53, 0.5) !important;
-        }
-    }
-}
-
 .sidebar {
-    width: 280px;
+    width: 315px;
     min-width: 240px;
     height: 100dvh;
     padding: 12px 9px;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    font-size: 16px;
-    background: #181818;
+    font-size: 15px;
+    background: #0d1825;
     border-right: 1px solid #2a2a2a;
-    box-sizing: border-box;
 
     button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
         background: transparent;
         border: none;
         color: #fff;
@@ -94,10 +37,36 @@ $accent-color: #a5b68d;
     }
 
     &__chats {
-        flex: 1;
+        height: max-content;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2em;
+    }
+
+    &__section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
         min-height: 0;
+        height: fit-content;
         overflow-y: scroll;
         overflow-x: hidden;
+
+        &.--pinned {
+            flex-shrink: 1;
+        }
+
+        &.--recent {
+            flex: 1;
+        }
+    }
+
+    &__section-title {
+        font-size: 14px;
+        color: #fff;
+        font-weight: normal;
+        opacity: 0.7;
     }
 
     &__chat {
@@ -156,6 +125,56 @@ $accent-color: #a5b68d;
             border-bottom: 1px solid #454545;
         }
 
+        &-actions {
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            min-width: fit-content;
+            max-width: 30%;
+        }
+
+        &-actions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+
+            position: fixed;
+            width: max-content;
+            min-width: 140px;
+
+            z-index: 1000;
+
+            background: #2f2f2f;
+            border: 1px solid #414141;
+            border-radius: 10px;
+            padding: 8px;
+
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+            button {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                width: 100%;
+                padding: 10px 12px;
+
+                border: none;
+                border-radius: 8px;
+                background: transparent;
+
+                color: #fff;
+                font-size: 14px;
+                text-align: left;
+
+                transition: background-color 0.15s ease;
+
+                &:hover {
+                    background-color: #414141;
+                }
+            }
+        }
+
         &-rename,
         &-delete {
             display: flex;
@@ -163,11 +182,6 @@ $accent-color: #a5b68d;
             justify-content: space-between;
             gap: 8px;
             cursor: pointer;
-
-            svg {
-                width: 23px;
-                height: 23px;
-            }
         }
 
         &-delete {
@@ -183,13 +197,16 @@ $accent-color: #a5b68d;
             background-color: rgba(122, 53, 53, 0.395) !important;
         }
 
-        &-open {
-            display: flex;
-            place-content: center;
+        &-open,
+        &-pin {
+            padding: 0.3rem 0.37rem !important;
+        }
 
-            svg {
-                height: 25px;
-                width: 25px;
+        &-pin {
+            &.--pinned {
+                svg {
+                    fill: #fff;
+                }
             }
         }
     }

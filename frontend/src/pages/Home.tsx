@@ -10,10 +10,11 @@ import {
     createChat,
     fetchChats,
     deleteChat as deleteChatRequest,
-    renameChat as renameChatRequest,
+    updateChat as updateChatRequest,
 } from "../api/chatApi";
 import { loadActiveChatId, saveActiveChatId } from "../utils/chatStorage";
 import type { authClient } from "../auth";
+import { mapChat } from "../utils/mapChat";
 
 type AuthUser = typeof authClient.$Infer.Session.user;
 
@@ -38,18 +39,7 @@ function Home({ user, onSignOut }: HomeProps) {
             try {
                 const chatResponses = await fetchChats();
 
-                const loadedChats: ChatType[] = chatResponses.map((chat) => ({
-                    id: chat.id,
-                    title: chat.title,
-                    messages: chat.messages.map((message) => ({
-                        id: message.id,
-                        text: message.text,
-                        sender: message.role === "USER" ? "user" : "assistant",
-                        timestamp: message.createdAt,
-                    })),
-                    isTyping: false,
-                    isResponseLoading: false,
-                }));
+                const loadedChats: ChatType[] = chatResponses.map(mapChat);
 
                 setChats(loadedChats);
 
@@ -77,34 +67,89 @@ function Home({ user, onSignOut }: HomeProps) {
         saveActiveChatId(activeChatId!);
     }, [activeChatId]);
 
-    async function deleteChat(chatId: string) {
+    async function handleNewChat(): Promise<ChatType | null> {
+        if (chats[0].title === "New Chat") return null;
+
         try {
-            await deleteChatRequest(chatId);
+            const chat = await createChat("New Chat");
 
-            const newChats = chats.filter((chat) => chat.id !== chatId);
+            const newChat = mapChat(chat);
 
-            if (newChats.length === 0) {
-                const newChat = await handleNewChat();
+            setIsSidebarOpen(false);
 
-                setChats([newChat]);
-                setActiveChatId(newChat.id);
-
-                return;
-            }
-
-            setChats(newChats);
+            return newChat;
         } catch (error) {
-            console.error("Failed to delete chat:", error);
+            console.error("Failed to create chat:", error);
+            throw error;
         }
     }
 
-    async function renameChat(id: string, newTitle: string) {
+    async function deleteChat(chatId: string) {
         try {
-            setChats((prev) => prev.map((chat) => (chat.id === id ? { ...chat, title: newTitle } : chat)));
+            await deleteChatRequest(chatId);
+        } catch (error) {
+            console.error("Failed to delete chat:", error);
 
-            await renameChatRequest(id, newTitle);
+            return;
+        }
+
+        const remaining = chats.filter((c) => c.id !== chatId);
+
+        if (remaining.length === 0) {
+            try {
+                const newChat = await handleNewChat();
+
+                if (!newChat) return;
+
+                setChats([newChat]);
+                setActiveChatId(newChat.id);
+            } catch (error) {
+                setChats([]);
+                setActiveChatId(null);
+            }
+
+            return;
+        }
+
+        setChats((prev) => prev.filter((c) => c.id !== chatId));
+        if (chatId === activeChatId) setActiveChatId(remaining[0].id);
+    }
+
+    async function renameChat(id: string, newTitle: string) {
+        const previousTitle = chats.find((c) => c.id === id)?.title;
+
+        if (previousTitle === undefined) return;
+
+        setChats((prev) => prev.map((c) => (c.id === id ? { ...c, title: newTitle } : c)));
+
+        try {
+            await updateChatRequest(id, { title: newTitle });
         } catch (error) {
             console.error("Failed to rename chat:", error);
+
+            setChats((prev) => prev.map((c) => (c.id === id ? { ...c, title: previousTitle } : c)));
+        }
+    }
+
+    async function togglePinChat(id: string) {
+        const chat = chats.find((c) => c.id === id);
+        if (!chat) return;
+
+        const previousPinnedAt = chat.pinnedAt;
+        const pinned = chat.pinnedAt === null;
+
+        function setPinnedAt(pinnedAt: string | null) {
+            setChats((prev) => prev.map((c) => (c.id === id ? { ...c, pinnedAt } : c)));
+        }
+
+        setPinnedAt(pinned ? new Date().toISOString() : null);
+
+        try {
+            const updated = await updateChatRequest(id, { pinned });
+            setPinnedAt(updated.pinnedAt);
+        } catch (error) {
+            console.error("Failed to pin chat:", error);
+            setPinnedAt(previousPinnedAt);
         }
     }
 
@@ -130,40 +175,15 @@ function Home({ user, onSignOut }: HomeProps) {
                     ...chat,
                     isResponseLoading: true,
                     messages: updatedMessages,
+                    lastMessageAt: new Date().toISOString(),
                     error: undefined,
                 };
-            })
+            }),
         );
 
         const conversation = createConversation(updatedMessages);
 
         generateAssistantResponse(conversation);
-    }
-
-    async function handleNewChat(): Promise<ChatType> {
-        try {
-            const chat = await createChat("New Chat");
-
-            const newChat: ChatType = {
-                id: chat.id,
-                title: chat.title,
-                messages: chat.messages.map((message) => ({
-                    id: message.id,
-                    text: message.text,
-                    sender: message.role === "USER" ? "user" : "assistant",
-                    timestamp: message.createdAt,
-                })),
-                isTyping: false,
-                isResponseLoading: false,
-            };
-
-            setIsSidebarOpen(false);
-
-            return newChat;
-        } catch (error) {
-            console.error("Failed to create chat:", error);
-            throw error;
-        }
     }
 
     function retryResponse() {
@@ -176,7 +196,7 @@ function Home({ user, onSignOut }: HomeProps) {
                     isResponseLoading: true,
                     error: undefined,
                 };
-            })
+            }),
         );
 
         const conversation = createConversation(activeChat.messages);
@@ -207,6 +227,8 @@ function Home({ user, onSignOut }: HomeProps) {
                 onNewChat={async () => {
                     const newChat = await handleNewChat();
 
+                    if (!newChat) return;
+
                     setChats((prev) => [newChat, ...prev]);
                     setActiveChatId(newChat.id);
                 }}
@@ -214,6 +236,7 @@ function Home({ user, onSignOut }: HomeProps) {
                 activeChatId={activeChatId}
                 onDeleteChat={deleteChat}
                 onRenameChat={renameChat}
+                onPinChat={togglePinChat}
                 onSignOut={onSignOut}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}

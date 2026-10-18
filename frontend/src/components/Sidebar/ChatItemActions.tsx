@@ -1,16 +1,26 @@
-import { Pencil, Settings, Trash } from "lucide-react";
+import { Pencil, Pin, PinOff, Settings, Trash } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 type ChatItemActionsProps = {
-    actionsOpened: boolean;
-    menuRef: React.RefObject<HTMLDivElement | null>;
     onRename: () => void;
+    onPin: () => void;
     onDelete: () => void;
     onToggleActions: () => void;
+    actionsOpened: boolean;
+    pinned: boolean;
+    menuRef: React.RefObject<HTMLDivElement | null>;
 };
 
-function ChatItemActions({ actionsOpened, menuRef, onRename, onDelete, onToggleActions }: ChatItemActionsProps) {
+function ChatItemActions({
+    onRename,
+    onPin,
+    onDelete,
+    onToggleActions,
+    actionsOpened,
+    pinned,
+    menuRef,
+}: ChatItemActionsProps) {
     const actionsButtonRef = useRef<HTMLButtonElement>(null);
 
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -36,7 +46,7 @@ function ChatItemActions({ actionsOpened, menuRef, onRename, onDelete, onToggleA
 
             const left = Math.max(
                 padding,
-                Math.min(rect.right - menuRect.width, window.innerWidth - menuRect.width - padding)
+                Math.min(rect.right - menuRect.width, window.innerWidth - menuRect.width - padding),
             );
 
             const spaceBelow = window.innerHeight - rect.bottom;
@@ -81,7 +91,7 @@ function ChatItemActions({ actionsOpened, menuRef, onRename, onDelete, onToggleA
                             }}
                             className="sidebar__chat-rename">
                             Rename
-                            <Pencil />
+                            <Pencil size={22} />
                         </button>
 
                         <button
@@ -91,10 +101,10 @@ function ChatItemActions({ actionsOpened, menuRef, onRename, onDelete, onToggleA
                             }}
                             className="sidebar__chat-delete">
                             Delete
-                            <Trash />
+                            <Trash size={22} />
                         </button>
                     </div>,
-                    document.body
+                    document.body,
                 )}
 
             <button
@@ -104,7 +114,16 @@ function ChatItemActions({ actionsOpened, menuRef, onRename, onDelete, onToggleA
                     onToggleActions();
                 }}
                 className="sidebar__chat-open">
-                <Settings />
+                <Settings size={22} />
+            </button>
+
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onPin();
+                }}
+                className="sidebar__chat-pin">
+                {pinned ? <PinOff size={22} /> : <Pin size={22} />}
             </button>
         </div>
     );

@@ -9,7 +9,7 @@ import { CustomThrottlerGuard } from "../common/guards/custom-throttler.guard.js
 import { UpdateChatDto } from "./dto/update-chat.dto.js";
 
 @UseGuards(AuthGuard)
-@Controller("chat")
+@Controller("chats")
 export class ChatController {
     constructor(private readonly chatService: ChatService) {}
 
@@ -18,18 +18,18 @@ export class ChatController {
         return this.chatService.getUserChats(request.user.id);
     }
 
-    @Post("title")
-    async generateTitle(@Request() request: AuthenticatedRequest, @Body() dto: GenerateTitleDto) {
-        const title = await this.chatService.generateTitle(request.user.id, dto.chatId, dto.message);
-
-        return {
-            response: title,
-        };
-    }
-
-    @Post("create")
+    @Post()
     async createChat(@Request() request: AuthenticatedRequest, @Body() dto: CreateChatDto) {
         return this.chatService.createChat(request.user.id, dto.title);
+    }
+
+    @Patch(":id")
+    async updateChat(
+        @Request() request: AuthenticatedRequest,
+        @Param("id") chatId: string,
+        @Body() dto: UpdateChatDto,
+    ) {
+        return this.chatService.updateChat(request.user.id, chatId, dto);
     }
 
     @Delete(":id")
@@ -37,19 +37,27 @@ export class ChatController {
         return this.chatService.deleteChat(request.user.id, chatId);
     }
 
-    @Patch(":id")
-    async updateChat(
+    @Post(":id/title")
+    async generateTitle(
         @Request() request: AuthenticatedRequest,
         @Param("id") chatId: string,
-        @Body() dto: UpdateChatDto
+        @Body() dto: GenerateTitleDto,
     ) {
-        return this.chatService.renameChat(request.user.id, chatId, dto.title);
+        const title = await this.chatService.generateTitle(request.user.id, chatId, dto.message);
+
+        return {
+            response: title,
+        };
     }
 
     @UseGuards(CustomThrottlerGuard)
-    @Post()
-    async generateResponse(@Request() request: AuthenticatedRequest, @Body() dto: SendMessageDto) {
-        const response = await this.chatService.generateResponse(request.user.id, dto.chatId, dto.messages);
+    @Post(":id/messages")
+    async generateResponse(
+        @Request() request: AuthenticatedRequest,
+        @Param("id") chatId: string,
+        @Body() dto: SendMessageDto,
+    ) {
+        const response = await this.chatService.generateResponse(request.user.id, chatId, dto.messages);
 
         return {
             response,

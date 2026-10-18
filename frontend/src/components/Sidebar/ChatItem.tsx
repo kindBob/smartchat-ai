@@ -9,6 +9,7 @@ type ChatItemsProps = {
     onSelectChat: (id: string) => void;
     onDeleteChat: (id: string) => void;
     onRenameChat: (id: string, newTitle: string) => void;
+    onPinChat: (id: string) => void;
     onToggleActions: () => void;
     onCloseActions: () => void;
 };
@@ -19,6 +20,7 @@ function ChatItem({
     actionsOpened,
     onSelectChat,
     onRenameChat,
+    onPinChat,
     onDeleteChat,
     onToggleActions,
     onCloseActions,
@@ -112,6 +114,10 @@ function ChatItem({
             <ChatItemActions
                 menuRef={menuRef}
                 onRename={() => (!isRenaming ? setIsRenaming(true) : handleRename())}
+                onPin={() => {
+                    isRenaming && setIsRenaming(false);
+                    onPinChat(chat.id);
+                }}
                 onDelete={() => {
                     onDeleteChat(chat.id);
                 }}
@@ -120,6 +126,7 @@ function ChatItem({
                     setIsRenaming(false);
                 }}
                 actionsOpened={actionsOpened}
+                pinned={chat.pinnedAt === null ? false : true}
             />
         </div>
     );
