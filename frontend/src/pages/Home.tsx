@@ -28,37 +28,43 @@ function Home({ user, onSignOut }: HomeProps) {
     const [isLoadingChats, setIsLoadingChats] = useState(true);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
+    const [loadError, setLoadError] = useState<string | null>(null);
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
 
     const { generateAssistantResponse, generateTitle, stopTyping } = useChatGeneration({ activeChatId, setChats });
 
-    useEffect(() => {
-        async function loadUserChats() {
-            try {
-                const chatResponses = await fetchChats();
+    async function loadUserChats() {
+        try {
+            setLoadError(null);
+            setIsLoadingChats(true);
 
-                const loadedChats: ChatType[] = chatResponses.map(mapChat);
+            const chatResponses = await fetchChats();
 
-                setChats(loadedChats);
+            const loadedChats: ChatType[] = chatResponses.map(mapChat);
 
-                const loadedActiveChatId = loadActiveChatId();
+            setChats(loadedChats);
 
-                if (loadedActiveChatId && loadedChats.some((chat) => chat.id === loadedActiveChatId)) {
-                    setActiveChatId(loadedActiveChatId);
-                } else if (loadedChats.length > 0) {
-                    setActiveChatId(loadedChats[0].id);
-                } else {
-                    setActiveChatId(null);
-                }
-            } catch (error) {
-                console.error("Failed to load chats:", error);
-            } finally {
-                setIsLoadingChats(false);
+            const loadedActiveChatId = loadActiveChatId();
+
+            if (loadedActiveChatId && loadedChats.some((chat) => chat.id === loadedActiveChatId)) {
+                setActiveChatId(loadedActiveChatId);
+            } else if (loadedChats.length > 0) {
+                setActiveChatId(loadedChats[0].id);
+            } else {
+                setActiveChatId(null);
             }
+        } catch (error) {
+            console.error("Failed to load chats:", error);
+            setLoadError("Failed to load your chats.");
+        } finally {
+            setIsLoadingChats(false);
         }
+    }
 
+    useEffect(() => {
         loadUserChats();
     }, []);
 
@@ -67,15 +73,16 @@ function Home({ user, onSignOut }: HomeProps) {
         saveActiveChatId(activeChatId!);
     }, [activeChatId]);
 
-    async function handleNewChat(): Promise<ChatType | null> {
-        if (chats[0].title === "New Chat") return null;
+    async function createNewChat(): Promise<ChatType | null> {
+        if (chats[0].title === "New Chat") {
+            selectChat(chats[0].id);
+            return null;
+        }
 
         try {
             const chat = await createChat("New Chat");
 
             const newChat = mapChat(chat);
-
-            setIsSidebarOpen(false);
 
             return newChat;
         } catch (error) {
@@ -85,6 +92,8 @@ function Home({ user, onSignOut }: HomeProps) {
     }
 
     async function deleteChat(chatId: string) {
+        stopTyping();
+
         try {
             await deleteChatRequest(chatId);
         } catch (error) {
@@ -97,7 +106,7 @@ function Home({ user, onSignOut }: HomeProps) {
 
         if (remaining.length === 0) {
             try {
-                const newChat = await handleNewChat();
+                const newChat = await createNewChat();
 
                 if (!newChat) return;
 
@@ -216,6 +225,18 @@ function Home({ user, onSignOut }: HomeProps) {
         );
     }
 
+    if (loadError) {
+        return (
+            <main className="home-loading">
+                <div className="loading-logo">S</div>
+                <p className="chat-error">
+                    {loadError}
+                    <button onClick={loadUserChats}>Try Again</button>
+                </p>
+            </main>
+        );
+    }
+
     return (
         <main className="home">
             <button className="mobile-menu-button" onClick={() => setIsSidebarOpen(true)} aria-label="Open sidebar">
@@ -225,12 +246,17 @@ function Home({ user, onSignOut }: HomeProps) {
                 userName={user.name || user.email || "User"}
                 chats={chats}
                 onNewChat={async () => {
-                    const newChat = await handleNewChat();
+                    try {
+                        const newChat = await createNewChat();
 
-                    if (!newChat) return;
+                        if (!newChat) return;
 
-                    setChats((prev) => [newChat, ...prev]);
-                    setActiveChatId(newChat.id);
+                        setChats((prev) => [newChat, ...prev]);
+                        setActiveChatId(newChat.id);
+                        setIsSidebarOpen(false);
+                    } catch (error) {
+                        console.error("Failed to create a new chat", error);
+                    }
                 }}
                 onSelectChat={selectChat}
                 activeChatId={activeChatId}

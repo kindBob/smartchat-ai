@@ -15,6 +15,7 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
     const MAX_TEXTAREA_HEIGHT = 120;
 
     const isMobile = useIsMobile();
+    console.log(isMobile);
 
     function resizeTextArea() {
         const textarea = textareaRef.current;
