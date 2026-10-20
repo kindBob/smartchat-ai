@@ -1,6 +1,6 @@
 import type { ChatType } from "../../types/Chat";
 import ChatItem from "./ChatItem";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import "./Sidebar.scss";
 
 type SidebarProps = {
@@ -40,16 +40,11 @@ function Sidebar({
         setOpenedActionsChatId(null);
     }, []);
 
-    useEffect(() => {
-        if (isSidebarOpen === false) closeActions();
-    }, [isSidebarOpen]);
-
     function renderChat(chat: ChatType) {
         return (
             <ChatItem
                 key={chat.id}
                 chat={chat}
-                isSidebarOpen={isSidebarOpen}
                 isActive={chat.id === activeChatId}
                 onSelectChat={(id: string) => {
                     setOpenedActionsChatId(null);

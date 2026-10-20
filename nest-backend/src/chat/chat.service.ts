@@ -4,6 +4,9 @@ import { GoogleGenAI } from "@google/genai";
 import { MessageDto } from "./dto/send-message.dto.js";
 import { PrismaService } from "../database/prisma.service.js";
 import { UpdateChatDto } from "./dto/update-chat.dto.js";
+import { Prisma } from "../generated/prisma/client.js";
+
+const MAX_PINNED_CHATS = 5;
 
 @Injectable()
 export class ChatService {
@@ -174,18 +177,34 @@ export class ChatService {
     }
 
     async updateChat(userId: string, chatId: string, dto: UpdateChatDto) {
-        const result = await this.prisma.chat.updateMany({
-            where: {
-                id: chatId,
-                userId,
-            },
-            data: {
-                ...(dto.title !== undefined && { title: dto.title }),
-                ...(dto.pinned !== undefined && { pinnedAt: dto.pinned ? new Date() : null }),
-            },
-        });
+        const data: Prisma.ChatUpdateInput = {};
 
-        return this.prisma.chat.findFirst({ where: { id: chatId, userId } });
+        if (dto.title !== undefined) data.title = dto.title;
+        if (dto.pinned !== undefined) data.pinnedAt = dto.pinned ? new Date() : null;
+
+        if (Object.keys(data).length === 0) throw new BadRequestException("Nothing to update.");
+
+        return this.prisma.$transaction(async (tx) => {
+            const chat = await tx.chat.findFirst({ where: { id: chatId, userId }, select: { pinnedAt: true } });
+
+            if (!chat) throw new NotFoundException("Chat not found.");
+
+            if (dto.pinned && chat.pinnedAt === null) {
+                const pinnedCount = await tx.chat.count({
+                    where: { userId, pinnedAt: { not: null } },
+                });
+
+                if (pinnedCount >= MAX_PINNED_CHATS) {
+                    throw new BadRequestException(`You can pin up to ${MAX_PINNED_CHATS} chats.`);
+                }
+            }
+
+            return tx.chat.update({
+                where: { id: chatId },
+                data,
+                select: { id: true, title: true, pinnedAt: true },
+            });
+        });
     }
 
     async togglePinChat(userId: string, chatId: string, pinned: boolean) {
