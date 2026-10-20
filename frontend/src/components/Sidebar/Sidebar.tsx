@@ -1,13 +1,13 @@
 import type { ChatType } from "../../types/Chat";
 import ChatItem from "./ChatItem";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./Sidebar.scss";
 
 type SidebarProps = {
     chats: ChatType[];
     activeChatId: string | null;
-    isOpen: boolean;
     userName: string;
+    isSidebarOpen: boolean;
     onSelectChat: (id: string) => void;
     onNewChat: () => void;
     onDeleteChat: (id: string) => void;
@@ -20,8 +20,8 @@ type SidebarProps = {
 function Sidebar({
     chats,
     activeChatId,
-    isOpen,
     userName,
+    isSidebarOpen,
     onClose,
     onSelectChat,
     onNewChat,
@@ -40,11 +40,16 @@ function Sidebar({
         setOpenedActionsChatId(null);
     }, []);
 
+    useEffect(() => {
+        if (isSidebarOpen === false) closeActions();
+    }, [isSidebarOpen]);
+
     function renderChat(chat: ChatType) {
         return (
             <ChatItem
                 key={chat.id}
                 chat={chat}
+                isSidebarOpen={isSidebarOpen}
                 isActive={chat.id === activeChatId}
                 onSelectChat={(id: string) => {
                     setOpenedActionsChatId(null);
@@ -64,8 +69,8 @@ function Sidebar({
 
     return (
         <>
-            <div className={`sidebar-overlay ${isOpen ? "--visible" : ""}`} onClick={onClose} />
-            <aside className={`sidebar ${isOpen ? "--open" : ""}`}>
+            <div className={`sidebar-overlay ${isSidebarOpen ? "--visible" : ""}`} onClick={onClose} />
+            <aside className={`sidebar ${isSidebarOpen ? "--open" : ""}`}>
                 <button className="sidebar__new-chat" onClick={onNewChat}>
                     + New Chat
                 </button>

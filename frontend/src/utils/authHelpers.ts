@@ -14,9 +14,3 @@ export async function sendVerificationCode(email: string) {
         throw new Error("Could not send the verification code.");
     }
 }
-
-export function getErrorMessage(err: unknown, fallback: string): string {
-    const msg = (err instanceof Error && err.message) || (typeof err === "string" && err) || fallback;
-
-    return msg.endsWith(".") ? msg : `${msg}.`;
-}

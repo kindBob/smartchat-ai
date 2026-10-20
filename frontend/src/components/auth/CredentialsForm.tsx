@@ -1,7 +1,8 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "../../auth";
-import { getErrorMessage, sendVerificationCode } from "../../utils/authHelpers";
+import { sendVerificationCode } from "../../utils/authHelpers";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 import AuthMessages from "./AuthMessages";
 
 type CredentialsFormProps = {

@@ -1,6 +1,7 @@
 import { ArrowLeft, X } from "lucide-react";
 import { useState } from "react";
-import { getErrorMessage, sendVerificationCode } from "../../utils/authHelpers";
+import { sendVerificationCode } from "../../utils/authHelpers";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 import { authClient } from "../../auth";
 import AuthMessages from "./AuthMessages";
 

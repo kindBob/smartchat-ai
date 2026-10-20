@@ -5,6 +5,7 @@ import ChatItemActions from "./ChatItemActions";
 type ChatItemsProps = {
     chat: ChatType;
     isActive: boolean;
+    isSidebarOpen: boolean;
     actionsOpened: boolean;
     onSelectChat: (id: string) => void;
     onDeleteChat: (id: string) => void;
@@ -17,6 +18,7 @@ type ChatItemsProps = {
 function ChatItem({
     chat,
     isActive,
+    isSidebarOpen,
     actionsOpened,
     onSelectChat,
     onRenameChat,

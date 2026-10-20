@@ -5,16 +5,18 @@ import type { ChatType } from "../types/Chat";
 import { createConversation, createMessage } from "../utils/conversation";
 import { SquareMenu } from "lucide-react";
 import { useChatGeneration } from "../hooks/useChatGeneration";
-import "./Home.scss";
+import { loadActiveChatId, saveActiveChatId } from "../utils/chatStorage";
+import type { authClient } from "../auth";
+import { mapChat } from "../utils/mapChat";
+import { getErrorMessage } from "../utils/getErrorMessage";
+import { toast } from "sonner";
 import {
     createChat,
     fetchChats,
     deleteChat as deleteChatRequest,
     updateChat as updateChatRequest,
 } from "../api/chatApi";
-import { loadActiveChatId, saveActiveChatId } from "../utils/chatStorage";
-import type { authClient } from "../auth";
-import { mapChat } from "../utils/mapChat";
+import "./Home.scss";
 
 type AuthUser = typeof authClient.$Infer.Session.user;
 
@@ -32,9 +34,9 @@ function Home({ user, onSignOut }: HomeProps) {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
-
     const { generateAssistantResponse, generateTitle, stopTyping } = useChatGeneration({ activeChatId, setChats });
+
+    const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
 
     async function loadUserChats() {
         try {
@@ -74,8 +76,11 @@ function Home({ user, onSignOut }: HomeProps) {
     }, [activeChatId]);
 
     async function createNewChat(): Promise<ChatType | null> {
-        if (chats[0].title === "New Chat") {
+        if (chats[0].title === "New Chat" && chats[0].messages.length < 2) {
             selectChat(chats[0].id);
+
+            toast("You already have an empty chat.");
+
             return null;
         }
 
@@ -87,18 +92,35 @@ function Home({ user, onSignOut }: HomeProps) {
             return newChat;
         } catch (error) {
             console.error("Failed to create chat:", error);
+            toast.error(getErrorMessage(error, "Could not create a chat"), { id: "create-chat" });
             throw error;
         }
     }
 
     async function deleteChat(chatId: string) {
-        stopTyping();
+        if (chats[0].title === "New Chat" && chats[0].messages.length < 2) {
+            toast("You can't delete an empty chat.");
+
+            return;
+        }
+
+        const request = deleteChatRequest(chatId);
+
+        toast.promise(request, {
+            loading: "Deleting chat...",
+            success: "Chat deleted.",
+            error: (err) => {
+                console.error("Failed to delete chat:", err);
+                return getErrorMessage(err, "Could not delete the chat.");
+            },
+            duration: 2000,
+        });
 
         try {
-            await deleteChatRequest(chatId);
-        } catch (error) {
-            console.error("Failed to delete chat:", error);
+            await request;
 
+            stopTyping();
+        } catch (error) {
             return;
         }
 
@@ -135,8 +157,8 @@ function Home({ user, onSignOut }: HomeProps) {
             await updateChatRequest(id, { title: newTitle });
         } catch (error) {
             console.error("Failed to rename chat:", error);
-
             setChats((prev) => prev.map((c) => (c.id === id ? { ...c, title: previousTitle } : c)));
+            toast.error(getErrorMessage(error, "Could not rename the chat"), { id: "rename-chat" });
         }
     }
 
@@ -159,6 +181,7 @@ function Home({ user, onSignOut }: HomeProps) {
         } catch (error) {
             console.error("Failed to pin chat:", error);
             setPinnedAt(previousPinnedAt);
+            toast.error(getErrorMessage(error, "Could not pin the chat"), { id: "pin-chat" });
         }
     }
 
@@ -264,7 +287,7 @@ function Home({ user, onSignOut }: HomeProps) {
                 onRenameChat={renameChat}
                 onPinChat={togglePinChat}
                 onSignOut={onSignOut}
-                isOpen={isSidebarOpen}
+                isSidebarOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
             />
             <Chat chat={activeChat} onSend={sendMessage} onStop={stopTyping} onRetry={retryResponse} />
