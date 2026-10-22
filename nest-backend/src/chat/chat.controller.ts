@@ -57,7 +57,6 @@ export class ChatController {
         @Param("id") chatId: string,
         @Body() dto: SendMessageDto,
     ) {
-        console.log(dto.text);
         const response = await this.chatService.generateResponse(request.user.id, chatId, dto.text);
 
         return {

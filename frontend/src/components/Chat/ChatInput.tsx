@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Square } from "lucide-react";
-import { useIsMobile } from "../hooks/useIsMobile";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 type ChatInputProps = {
     onSend: (text: string) => void;

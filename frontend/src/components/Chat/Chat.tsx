@@ -1,6 +1,6 @@
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
-import type { ChatType } from "../types/Chat";
+import type { ChatType } from "../../types/Chat";
 import "./Chat.scss";
 
 type ChatProps = {

@@ -1,5 +1,5 @@
-import type { MessageType } from "../types/Chat";
-import Markdown from "./markdown/Markdown";
+import type { MessageType } from "../../types/Chat";
+import Markdown from "../markdown/Markdown";
 
 const timeFormatter = new Intl.DateTimeFormat([], {
     hour: "2-digit",
