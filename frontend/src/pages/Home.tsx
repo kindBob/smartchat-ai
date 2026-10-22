@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar/Sidebar";
 import type { ChatType } from "../types/Chat";
-import { createConversation, createMessage } from "../utils/conversation";
+import { createMessage } from "../utils/conversation";
 import { SquareMenu } from "lucide-react";
 import { useChatGeneration } from "../hooks/useChatGeneration";
 import { loadActiveChatId, saveActiveChatId } from "../utils/chatStorage";
@@ -11,7 +11,7 @@ import { mapChat } from "../utils/mapChat";
 import { getErrorMessage } from "../utils/getErrorMessage";
 import { toast } from "sonner";
 import {
-    createChat,
+    createChat as createChatRequest,
     fetchChats,
     deleteChat as deleteChatRequest,
     updateChat as updateChatRequest,
@@ -29,23 +29,36 @@ function Home({ user, onSignOut }: HomeProps) {
     const [chats, setChats] = useState<ChatType[]>([]);
     const [isLoadingChats, setIsLoadingChats] = useState(true);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
-
     const [loadError, setLoadError] = useState<string | null>(null);
-
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCreatingChat, setIsCreatingChat] = useState(false);
 
-    const { generateAssistantResponse, generateTitle, stopTyping } = useChatGeneration({ activeChatId, setChats });
+    const hasLoadedRef = useRef(false);
+    const isCreatingChatRef = useRef(false);
+
+    const { generateAssistantResponse, generateTitle, stopTyping } = useChatGeneration({ setChats });
 
     const activeChat = chats.find((chat) => chat.id === activeChatId) ?? chats[0];
 
     async function loadUserChats() {
+        if (hasLoadedRef.current) return;
+        hasLoadedRef.current = true;
+
         try {
             setLoadError(null);
             setIsLoadingChats(true);
 
-            const chatResponses = await fetchChats();
+            let loadedChats = (await fetchChats()).map(mapChat);
 
-            const loadedChats: ChatType[] = chatResponses.map(mapChat);
+            if (loadedChats.length === 0) {
+                const newChat = await createChat();
+
+                if (!newChat) {
+                    throw new Error("Failed to create initial chat.");
+                }
+
+                loadedChats = [newChat];
+            }
 
             setChats(loadedChats);
 
@@ -60,6 +73,7 @@ function Home({ user, onSignOut }: HomeProps) {
             }
         } catch (error) {
             console.error("Failed to load chats:", error);
+            hasLoadedRef.current = false;
             setLoadError("Failed to load your chats.");
         } finally {
             setIsLoadingChats(false);
@@ -71,21 +85,25 @@ function Home({ user, onSignOut }: HomeProps) {
     }, []);
 
     useEffect(() => {
-        if (!activeChat) return;
-        saveActiveChatId(activeChatId!);
+        if (activeChat) saveActiveChatId(activeChatId!);
     }, [activeChatId]);
 
-    async function createNewChat(): Promise<ChatType | null> {
-        if (chats[0].title === "New Chat" && chats[0].messages.length < 2) {
-            selectChat(chats[0].id);
+    async function createChat(): Promise<ChatType | null> {
+        if (isCreatingChatRef.current) return null;
 
-            toast("You already have an empty chat.");
+        const emptyChat = chats.find((c) => c.title === "New Chat" && !c.messages.some((m) => m.sender === "user"));
 
+        if (emptyChat) {
+            selectChat(emptyChat.id);
+            toast("You already have an empty chat.", { id: "empty-chat" });
             return null;
         }
 
+        isCreatingChatRef.current = true;
+        setIsCreatingChat(true);
+
         try {
-            const chat = await createChat("New Chat");
+            const chat = await createChatRequest("New Chat");
 
             const newChat = mapChat(chat);
 
@@ -94,13 +112,20 @@ function Home({ user, onSignOut }: HomeProps) {
             console.error("Failed to create chat:", error);
             toast.error(getErrorMessage(error, "Could not create a chat"), { id: "create-chat" });
             throw error;
+        } finally {
+            isCreatingChatRef.current = false;
+            setIsCreatingChat(false);
         }
     }
 
     async function deleteChat(chatId: string) {
-        if (chats[0].title === "New Chat" && chats[0].messages.length < 2) {
-            toast("You can't delete an empty chat.");
+        const chat = chats.find((c) => c.id === chatId);
+        if (!chat) return;
 
+        const isEmpty = !chat.messages.some((m) => m.sender === "user");
+
+        if (isEmpty && chats.length === 1) {
+            toast("This is your only chat, and it's already empty.");
             return;
         }
 
@@ -119,7 +144,7 @@ function Home({ user, onSignOut }: HomeProps) {
         try {
             await request;
 
-            stopTyping();
+            stopTyping(chatId);
         } catch (error) {
             return;
         }
@@ -128,7 +153,7 @@ function Home({ user, onSignOut }: HomeProps) {
 
         if (remaining.length === 0) {
             try {
-                const newChat = await createNewChat();
+                const newChat = await createChat();
 
                 if (!newChat) return;
 
@@ -191,49 +216,42 @@ function Home({ user, onSignOut }: HomeProps) {
     }
 
     function sendMessage(userMessage: string) {
+        if (!activeChat || activeChat.isResponseLoading) return;
+
+        const chatId = activeChat.id;
+        const isFirstMessage = activeChat.title === "New Chat";
         const newMessage = createMessage(userMessage, "user");
 
-        if (activeChat?.title === "New Chat") {
-            generateTitle(userMessage);
-        }
-
-        const updatedMessages = [...activeChat.messages, newMessage];
-
-        setChats((prevChats) =>
-            prevChats.map((chat) => {
-                if (chat.id !== activeChatId) return chat;
-
-                return {
-                    ...chat,
-                    isResponseLoading: true,
-                    messages: updatedMessages,
-                    lastMessageAt: new Date().toISOString(),
-                    error: undefined,
-                };
-            }),
+        setChats((prev) =>
+            prev.map((chat) =>
+                chat.id !== chatId
+                    ? chat
+                    : {
+                          ...chat,
+                          isResponseLoading: true,
+                          messages: [...chat.messages, newMessage],
+                          lastMessageAt: new Date().toISOString(),
+                          error: undefined,
+                      },
+            ),
         );
 
-        const conversation = createConversation(updatedMessages);
-
-        generateAssistantResponse(conversation);
+        if (isFirstMessage) generateTitle(chatId, userMessage);
+        generateAssistantResponse(chatId, userMessage);
     }
 
     function retryResponse() {
-        setChats((prevChats) =>
-            prevChats.map((chat) => {
-                if (chat.id !== activeChatId) return chat;
+        if (!activeChat || activeChat.isResponseLoading) return;
 
-                return {
-                    ...chat,
-                    isResponseLoading: true,
-                    error: undefined,
-                };
-            }),
+        const chatId = activeChat.id;
+        const lastUserMessage = [...activeChat.messages].reverse().find((m) => m.sender === "user");
+        if (!lastUserMessage) return;
+
+        setChats((prev) =>
+            prev.map((c) => (c.id === chatId ? { ...c, isResponseLoading: true, error: undefined } : c)),
         );
 
-        const conversation = createConversation(activeChat.messages);
-
-        generateAssistantResponse(conversation);
+        generateAssistantResponse(activeChat.id, lastUserMessage.text);
     }
 
     if (isLoadingChats) {
@@ -270,7 +288,7 @@ function Home({ user, onSignOut }: HomeProps) {
                 chats={chats}
                 onNewChat={async () => {
                     try {
-                        const newChat = await createNewChat();
+                        const newChat = await createChat();
 
                         if (!newChat) return;
 
@@ -288,9 +306,15 @@ function Home({ user, onSignOut }: HomeProps) {
                 onPinChat={togglePinChat}
                 onSignOut={onSignOut}
                 isSidebarOpen={isSidebarOpen}
+                isCreatingChat={isCreatingChat}
                 onClose={() => setIsSidebarOpen(false)}
             />
-            <Chat chat={activeChat} onSend={sendMessage} onStop={stopTyping} onRetry={retryResponse} />
+            <Chat
+                chat={activeChat}
+                onSend={sendMessage}
+                onStop={() => activeChat && stopTyping(activeChat.id)}
+                onRetry={retryResponse}
+            />
         </main>
     );
 }

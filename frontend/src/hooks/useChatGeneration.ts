@@ -1,187 +1,143 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
-import type { ChatType, MessageType } from "../types/Chat";
+import type { ChatType } from "../types/Chat";
 import { fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
-import { ApiError, type ConversationType } from "../types/Api";
+import { ApiError } from "../types/Api";
 import { createMessage } from "../utils/conversation";
 
 type UseChatGenerationProps = {
-    activeChatId: string | null;
     setChats: Dispatch<SetStateAction<ChatType[]>>;
 };
 
-export function useChatGeneration({ activeChatId, setChats }: UseChatGenerationProps) {
-    const abortControllerRef = useRef<AbortController | null>(null);
-    const typingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+const TYPING_TICK_MS = 20;
+const TYPING_TARGET_MS = 1500; // long replies finish in about this time
+const MIN_CHARS_PER_TICK = 2;
+
+export function useChatGeneration({ setChats }: UseChatGenerationProps) {
+    const controllersRef = useRef(new Map<string, AbortController>());
+    const intervalsRef = useRef(new Map<string, ReturnType<typeof setInterval>>());
+
+    function updateChat(chatId: string, update: (chat: ChatType) => ChatType) {
+        setChats((prev) => prev.map((chat) => (chat.id === chatId ? update(chat) : chat)));
+    }
+
+    function clearTyping(chatId: string) {
+        const interval = intervalsRef.current.get(chatId);
+        if (interval) clearInterval(interval);
+        intervalsRef.current.delete(chatId);
+    }
+
+    function abortRequest(chatId: string) {
+        controllersRef.current.get(chatId)?.abort();
+        controllersRef.current.delete(chatId);
+    }
 
     useEffect(() => {
-        return () => {
-            if (typingIntervalRef.current) {
-                clearInterval(typingIntervalRef.current);
-                typingIntervalRef.current = null;
-            }
+        const controllers = controllersRef.current;
+        const intervals = intervalsRef.current;
 
-            abortControllerRef.current?.abort();
+        return () => {
+            controllers.forEach((controller) => controller.abort());
+            intervals.forEach((interval) => clearInterval(interval));
+            controllers.clear();
+            intervals.clear();
         };
     }, []);
 
-    async function generateAssistantResponse(conversation: ConversationType[]) {
-        if (!activeChatId) return;
+    function setChatError(chatId: string, error: string) {
+        updateChat(chatId, (chat) => ({
+            ...chat,
+            isTyping: false,
+            isResponseLoading: false,
+            error,
+        }));
+    }
 
-        const currentChatId = activeChatId;
+    function startTypingAnimation(chatId: string, messageId: string, fullText: string) {
+        const step = Math.max(MIN_CHARS_PER_TICK, Math.ceil(fullText.length / (TYPING_TARGET_MS / TYPING_TICK_MS)));
+        let index = 0;
+
+        const interval = setInterval(() => {
+            index = Math.min(index + step, fullText.length);
+
+            const visibleText = fullText.slice(0, index);
+            const done = index >= fullText.length;
+
+            updateChat(chatId, (chat) => ({
+                ...chat,
+                isTyping: !done,
+                messages: chat.messages.map((m) => (m.id === messageId ? { ...m, text: visibleText } : m)),
+            }));
+
+            if (done) clearTyping(chatId);
+        }, TYPING_TICK_MS);
+
+        intervalsRef.current.set(chatId, interval);
+    }
+
+    async function generateAssistantResponse(chatId: string, userText: string) {
+        abortRequest(chatId);
+        clearTyping(chatId);
 
         const controller = new AbortController();
-        abortControllerRef.current = controller;
+        controllersRef.current.set(chatId, controller);
 
         try {
-            const aiResponse = await fetchAssistantResponse(currentChatId, conversation, controller);
-
+            const aiResponse = await fetchAssistantResponse(chatId, userText, controller);
             const assistantMessage = createMessage("", "assistant");
 
-            setChats((prevChats) =>
-                prevChats.map((chat) => {
-                    if (chat.id !== currentChatId) return chat;
+            updateChat(chatId, (chat) => ({
+                ...chat,
+                isTyping: true,
+                isResponseLoading: false,
+                lastMessageAt: new Date().toISOString(),
+                messages: [...chat.messages, assistantMessage],
+            }));
 
-                    return {
-                        ...chat,
-                        isTyping: true,
-                        isResponseLoading: false,
-                        messages: [...chat.messages, assistantMessage],
-                    };
-                }),
-            );
-
-            startTypingAnimation(assistantMessage, aiResponse, currentChatId);
+            startTypingAnimation(chatId, assistantMessage.id, aiResponse);
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") return;
 
             if (error instanceof ApiError) {
                 console.error("API error:", error.message);
 
-                const chatErrorMessage =
+                setChatError(
+                    chatId,
                     error.statusCode === 429 && error.retryAfter
                         ? `You can send another message in ${error.retryAfter} seconds.`
-                        : "Sorry, something went wrong.";
-
-                setChats((prevChats) =>
-                    prevChats.map((chat) => {
-                        if (chat.id !== currentChatId) return chat;
-
-                        return {
-                            ...chat,
-                            isTyping: false,
-                            isResponseLoading: false,
-                            error: chatErrorMessage,
-                        };
-                    }),
+                        : "Sorry, something went wrong.",
                 );
-
                 return;
             }
 
-            console.error("Unexpected error: ", error);
-
-            setChats((prevChats) =>
-                prevChats.map((chat) => {
-                    if (chat.id !== currentChatId) return chat;
-
-                    return {
-                        ...chat,
-                        isTyping: false,
-                        isResponseLoading: false,
-                        error: "Sorry, something went wrong.",
-                    };
-                }),
-            );
+            console.error("Unexpected error:", error);
+            setChatError(chatId, "Sorry, something went wrong.");
         } finally {
-            if (abortControllerRef.current === controller) abortControllerRef.current = null;
-        }
-    }
-
-    function startTypingAnimation(assistantMessage: MessageType, aiResponse: string, currentChatId: string) {
-        let index = 0;
-
-        typingIntervalRef.current = setInterval(() => {
-            if (index >= aiResponse.length) {
-                if (typingIntervalRef.current) {
-                    clearInterval(typingIntervalRef.current);
-                    typingIntervalRef.current = null;
-                }
-
-                setChats((prevChats) =>
-                    prevChats.map((chat) => {
-                        if (chat.id !== currentChatId) return chat;
-
-                        return {
-                            ...chat,
-                            isTyping: false,
-                        };
-                    }),
-                );
-
-                return;
+            if (controllersRef.current.get(chatId) === controller) {
+                controllersRef.current.delete(chatId);
             }
-
-            const currentChar = aiResponse[index];
-
-            setChats((prevChats) =>
-                prevChats.map((chat) => {
-                    if (chat.id !== currentChatId) return chat;
-
-                    return {
-                        ...chat,
-                        messages: chat.messages.map((message) => {
-                            if (message.id !== assistantMessage.id) return message;
-
-                            return {
-                                ...message,
-                                text: message.text + currentChar,
-                            };
-                        }),
-                    };
-                }),
-            );
-
-            index++;
-        }, 10);
-    }
-
-    function stopTyping() {
-        abortControllerRef.current?.abort();
-
-        if (typingIntervalRef.current) {
-            clearInterval(typingIntervalRef.current);
-            typingIntervalRef.current = null;
         }
-
-        setChats((prevChats) =>
-            prevChats.map((chat) => {
-                if (chat.id !== activeChatId) return chat;
-                return {
-                    ...chat,
-                    isTyping: false,
-                    isResponseLoading: false,
-                };
-            }),
-        );
     }
 
-    async function generateChatTitle(message: string) {
-        if (!activeChatId) return;
+    function stopTyping(chatId: string) {
+        abortRequest(chatId);
+        clearTyping(chatId);
 
-        const currentChatId = activeChatId;
+        updateChat(chatId, (chat) => ({
+            ...chat,
+            isTyping: false,
+            isResponseLoading: false,
+        }));
+    }
 
+    async function generateTitle(chatId: string, message: string) {
         try {
-            const newTitle = await fetchChatTitle(currentChatId, message);
+            const newTitle = await fetchChatTitle(chatId, message);
 
-            setChats((prev) => prev.map((chat) => (chat.id === currentChatId ? { ...chat, title: newTitle } : chat)));
+            updateChat(chatId, (chat) => (chat.title === "New Chat" ? { ...chat, title: newTitle } : chat));
         } catch (error) {
             console.error("Error generating title:", error);
         }
     }
 
-    return {
-        generateAssistantResponse,
-        generateTitle: generateChatTitle,
-        stopTyping,
-    };
+    return { generateAssistantResponse, generateTitle, stopTyping };
 }

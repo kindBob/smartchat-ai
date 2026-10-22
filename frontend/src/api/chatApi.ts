@@ -1,4 +1,4 @@
-import { ApiError, type ChatResponse, type ConversationType } from "../types/Api";
+import { ApiError, type ChatResponse } from "../types/Api";
 import { authFetch } from "./authFetch";
 
 const BASE_ENDPOINT = "/chats";
@@ -74,7 +74,7 @@ export async function fetchChatTitle(chatId: string, message: string): Promise<s
 
 export async function fetchAssistantResponse(
     chatId: string,
-    conversation: ConversationType[],
+    userText: string,
     controller: AbortController,
 ): Promise<string> {
     const request = await authFetch(`${BASE_ENDPOINT}/${chatId}/messages`, {
@@ -84,7 +84,7 @@ export async function fetchAssistantResponse(
         },
         signal: controller.signal,
         body: JSON.stringify({
-            messages: conversation,
+            text: userText,
         }),
     });
 

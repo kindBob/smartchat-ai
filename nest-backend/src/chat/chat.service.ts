@@ -1,17 +1,24 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import {
+    BadRequestException,
+    Injectable,
+    InternalServerErrorException,
+    Logger,
+    NotFoundException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { GoogleGenAI } from "@google/genai";
-import { MessageDto } from "./dto/send-message.dto.js";
 import { PrismaService } from "../database/prisma.service.js";
 import { UpdateChatDto } from "./dto/update-chat.dto.js";
 import { Prisma } from "../generated/prisma/client.js";
 
 const MAX_PINNED_CHATS = 5;
+const HISTORY_LIMIT = 30;
 
 @Injectable()
 export class ChatService {
     private readonly ai: GoogleGenAI;
     private readonly model: string;
+    private readonly logger = new Logger(ChatService.name);
 
     constructor(
         private readonly configService: ConfigService,
@@ -24,69 +31,53 @@ export class ChatService {
         this.model = this.configService.getOrThrow<string>("GEMINI_MODEL");
     }
 
-    async generateResponse(userId: string, chatId: string, messages: MessageDto[]) {
+    async generateResponse(userId: string, chatId: string, text: string) {
         const chat = await this.prisma.chat.findFirst({
-            where: {
-                id: chatId,
-                userId,
-            },
+            where: { id: chatId, userId },
+            select: { id: true },
         });
+        if (!chat) throw new NotFoundException("Chat not found.");
 
-        if (!chat) {
-            throw new NotFoundException("Chat not found");
-        }
+        const recent = await this.prisma.message.findMany({
+            where: { chatId },
+            orderBy: { createdAt: "desc" },
+            take: HISTORY_LIMIT,
+            select: { role: true, text: true },
+        });
+        const history = recent.reverse();
+
+        const firstUser = history.findIndex((m) => m.role === "USER");
+        const usable = firstUser === -1 ? [] : history.slice(firstUser);
+
+        const contents = [
+            ...usable.map((m) => ({
+                role: m.role === "USER" ? "user" : "model",
+                parts: [{ text: m.text }],
+            })),
+            { role: "user", parts: [{ text }] },
+        ];
+
+        let response: string;
 
         try {
-            const aiResponse = await this.ai.models.generateContent({
-                model: this.model,
-                contents: messages,
-            });
-
-            const response = aiResponse.text?.trim();
-
+            const aiResponse = await this.ai.models.generateContent({ model: this.model, contents });
+            response = aiResponse.text?.trim() ?? "";
             if (!response) throw new Error("Empty AI response");
-
-            const lastMessage = messages[messages.length - 1];
-
-            if (lastMessage?.role === "user") {
-                const userText = lastMessage.parts[0]?.text;
-
-                if (!userText) {
-                    throw new BadRequestException("Message text is required");
-                }
-
-                await this.prisma.message.create({
-                    data: {
-                        text: userText,
-                        role: "USER",
-                        chatId,
-                    },
-                });
-
-                await this.prisma.chat.update({
-                    where: {
-                        id: chatId,
-                    },
-                    data: {
-                        lastMessageAt: new Date(),
-                    },
-                });
-            }
-
-            await this.prisma.message.create({
-                data: {
-                    text: response,
-                    role: "MODEL",
-                    chatId,
-                },
-            });
-
-            return response;
         } catch (error) {
-            console.error("Gemini API error: ", error);
-
-            throw new InternalServerErrorException("Failed to generate AI response");
+            this.logger.error("Gemini API error", error);
+            throw new InternalServerErrorException("Failed to generate AI response.");
         }
+
+        const userAt = new Date();
+        const modelAt = new Date(userAt.getTime() + 1);
+
+        await this.prisma.$transaction([
+            this.prisma.message.create({ data: { text, role: "USER", chatId, createdAt: userAt } }),
+            this.prisma.message.create({ data: { text: response, role: "MODEL", chatId, createdAt: modelAt } }),
+            this.prisma.chat.update({ where: { id: chatId }, data: { lastMessageAt: modelAt } }),
+        ]);
+
+        return response;
     }
 
     async generateTitle(userId: string, chatId: string, message: string) {
@@ -173,23 +164,24 @@ export class ChatService {
             throw new NotFoundException("Chat not found");
         }
 
-        return this.prisma.chat.findFirst({ where: { id: chatId, userId } });
+        return { message: "Chat deleted." };
     }
 
     async updateChat(userId: string, chatId: string, dto: UpdateChatDto) {
-        const data: Prisma.ChatUpdateInput = {};
-
-        if (dto.title !== undefined) data.title = dto.title;
-        if (dto.pinned !== undefined) data.pinnedAt = dto.pinned ? new Date() : null;
-
-        if (Object.keys(data).length === 0) throw new BadRequestException("Nothing to update.");
+        if (dto.title === undefined && dto.pinned === undefined) {
+            throw new BadRequestException("Nothing to update.");
+        }
 
         return this.prisma.$transaction(async (tx) => {
-            const chat = await tx.chat.findFirst({ where: { id: chatId, userId }, select: { pinnedAt: true } });
+            const chat = await tx.chat.findFirst({
+                where: { id: chatId, userId },
+                select: { pinnedAt: true },
+            });
 
             if (!chat) throw new NotFoundException("Chat not found.");
 
-            if (dto.pinned && chat.pinnedAt === null) {
+            // Only count when pinning a chat that isn't already pinned
+            if (dto.pinned === true && chat.pinnedAt === null) {
                 const pinnedCount = await tx.chat.count({
                     where: { userId, pinnedAt: { not: null } },
                 });
@@ -201,87 +193,27 @@ export class ChatService {
 
             return tx.chat.update({
                 where: { id: chatId },
-                data,
+                data: {
+                    ...(dto.title !== undefined && { title: dto.title }),
+                    ...(dto.pinned !== undefined && {
+                        // keep the original pin time if it's already pinned
+                        pinnedAt: dto.pinned ? (chat.pinnedAt ?? new Date()) : null,
+                    }),
+                },
                 select: { id: true, title: true, pinnedAt: true },
             });
         });
     }
 
-    async togglePinChat(userId: string, chatId: string, pinned: boolean) {
-        const result = await this.prisma.chat.updateMany({
-            where: { id: chatId, userId },
-            data: { pinnedAt: pinned ? new Date() : null },
+    private findChats(userId: string) {
+        return this.prisma.chat.findMany({
+            where: { userId },
+            include: { messages: { orderBy: { createdAt: "asc" } } },
+            orderBy: [{ pinnedAt: { sort: "desc", nulls: "last" } }, { lastMessageAt: "desc" }],
         });
-
-        if (result.count === 0) {
-            throw new NotFoundException("Chat not found");
-        }
-
-        return this.prisma.chat.findFirst({ where: { id: chatId, userId } });
     }
 
     async getUserChats(userId: string) {
-        let chats = await this.prisma.chat.findMany({
-            where: {
-                userId,
-            },
-            include: {
-                messages: {
-                    orderBy: {
-                        createdAt: "asc",
-                    },
-                },
-            },
-            orderBy: [{ pinnedAt: { sort: "desc", nulls: "last" } }, { lastMessageAt: "desc" }],
-        });
-
-        if (chats.length === 0) {
-            await this.createChat(userId, "New Chat");
-
-            chats = await this.prisma.chat.findMany({
-                where: { userId },
-                include: {
-                    messages: {
-                        orderBy: {
-                            createdAt: "asc",
-                        },
-                    },
-                },
-                orderBy: {
-                    lastMessageAt: "desc",
-                },
-            });
-
-            return chats;
-        }
-
-        for (const chat of chats) {
-            if (chat.messages.length === 0) {
-                await this.prisma.message.create({
-                    data: {
-                        text: "Hello, how can I help you?",
-                        role: "MODEL",
-                        chatId: chat.id,
-                    },
-                });
-            }
-        }
-
-        if (chats.some((chat) => chat.messages.length === 0)) {
-            chats = await this.prisma.chat.findMany({
-                where: { userId },
-                include: {
-                    messages: {
-                        orderBy: { createdAt: "asc" },
-                    },
-                },
-
-                orderBy: {
-                    lastMessageAt: "desc",
-                },
-            });
-        }
-
-        return chats;
+        return this.findChats(userId);
     }
 }

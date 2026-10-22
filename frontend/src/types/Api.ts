@@ -1,12 +1,3 @@
-export type ConversationType = {
-    parts: [
-        {
-            text: string;
-        },
-    ];
-    role: "user" | "model";
-};
-
 export class ApiError extends Error {
     statusCode: number;
     retryAfter?: number;

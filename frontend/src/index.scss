@@ -19,6 +19,8 @@ body {
     background-color: #b5b5b5a1;
 }
 
-.toaster {
-    background: red !important;
+[data-sonner-toast] [data-close-button]:hover {
+    background: #fff !important;
+    border-color: #fff !important;
+    color: #000 !important;
 }

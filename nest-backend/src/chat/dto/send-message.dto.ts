@@ -1,27 +1,10 @@
-import { Type } from "class-transformer";
-import { IsArray, IsIn, IsNotEmpty, IsString, ValidateNested } from "class-validator";
-
-class PartDto {
-    @IsString()
-    @IsNotEmpty()
-    text: string;
-}
-
-export class MessageDto {
-    @IsString()
-    @IsNotEmpty()
-    @IsIn(["user", "model"])
-    role: "user" | "model";
-
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => PartDto)
-    parts: PartDto[];
-}
+import { Transform } from "class-transformer";
+import { IsString, MinLength, MaxLength } from "class-validator";
 
 export class SendMessageDto {
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => MessageDto)
-    messages: MessageDto[];
+    @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+    @IsString()
+    @MinLength(1)
+    @MaxLength(6000)
+    text!: string;
 }

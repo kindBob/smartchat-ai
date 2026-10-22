@@ -13,6 +13,12 @@ createRoot(document.getElementById("root")!).render(
             position="top-center"
             duration={3000}
             visibleToasts={3}
+            closeButton
+            toastOptions={{
+                style: {
+                    textAlign: "center",
+                },
+            }}
             style={
                 {
                     "--normal-bg": "#2a2a2a",
