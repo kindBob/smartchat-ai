@@ -8,6 +8,7 @@ type SidebarProps = {
     activeChatId: string | null;
     userName: string;
     isSidebarOpen: boolean;
+    isDesktopSidebarOpen: boolean;
     isCreatingChat: boolean;
     onSelectChat: (id: string) => void;
     onNewChat: () => void;
@@ -23,6 +24,7 @@ function Sidebar({
     activeChatId,
     userName,
     isSidebarOpen,
+    isDesktopSidebarOpen,
     isCreatingChat,
     onClose,
     onSelectChat,
@@ -70,7 +72,7 @@ function Sidebar({
     return (
         <>
             <div className={`sidebar-overlay ${isSidebarOpen ? "--visible" : ""}`} onClick={onClose} />
-            <aside className={`sidebar ${isSidebarOpen ? "--open" : ""}`}>
+            <aside className={`sidebar ${isSidebarOpen ? "--open" : ""} ${isDesktopSidebarOpen ? "" : "--desktop-closed"}`}>
                 <button className="sidebar__new-chat" onClick={onNewChat} disabled={isCreatingChat}>
                     + New Chat
                 </button>

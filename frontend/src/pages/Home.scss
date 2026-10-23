@@ -76,7 +76,44 @@
     display: none;
 }
 
+.desktop-sidebar-button {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    padding: 0;
+
+    border: none;
+    border-radius: 10px;
+    background: #242424;
+    color: #fff;
+
+    cursor: pointer;
+    z-index: 20;
+
+    transition: 0.2s ease;
+
+    &:hover {
+        background: #303030;
+    }
+
+    svg {
+        width: 65%;
+        height: 65%;
+    }
+}
+
 @media (max-width: 768px) {
+    .desktop-sidebar-button {
+        display: none;
+    }
+
     .mobile-menu-button {
         position: absolute;
         top: 15px;

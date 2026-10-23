@@ -4,13 +4,19 @@ $accent-color: #a5b68d;
     width: 315px;
     min-width: 240px;
     height: 100dvh;
-    padding: 12px 9px;
+    padding: 60px 9px 12px;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     font-size: 15px;
     background: #222830;
     border-right: 1px solid rgba(87, 89, 94, 0.575);
+    overflow: hidden;
+    transition:
+        width 0.25s ease,
+        min-width 0.25s ease,
+        padding 0.25s ease,
+        border-color 0.25s ease;
 
     button {
         display: flex;
@@ -277,7 +283,17 @@ $accent-color: #a5b68d;
     .sidebar {
         width: 240px;
         min-width: 240px;
-        padding: 1rem;
+        padding: 60px 1rem 1rem;
+    }
+}
+
+@media (min-width: 769px) {
+    .sidebar.--desktop-closed {
+        width: 0;
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-right-color: transparent;
     }
 }
 
@@ -290,11 +306,12 @@ $accent-color: #a5b68d;
         width: min(280px, 85vw);
         min-width: 0;
         height: 100dvh;
+        padding: 1rem;
 
         z-index: 100;
 
-        transform: translateX(-100%);
         transition: 0.25s ease;
+        transform: translateX(-100%);
 
         &.--open {
             transform: translateX(0);
