@@ -50,7 +50,7 @@ function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: C
                 onClick={onScrollDown}
                 aria-label="Scroll to bottom"
                 tabIndex={isAtBottom ? -1 : 0}>
-                <CircleChevronDown size={22} />
+                <CircleChevronDown size={25} />
             </button>
 
             <textarea

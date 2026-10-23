@@ -23,22 +23,24 @@ function Chat({ chat, onSend, onStop, onRetry }: ChatProps) {
 
     return (
         <div className="chat">
-            <MessageList
-                messages={chat.messages}
-                onRetry={onRetry}
-                isResponseLoading={chat.isResponseLoading}
-                error={chat?.error}
-                bottomRef={bottomRef}
-                isAtBottom={isAtBottom}
-                setIsAtBottom={setIsAtBottom}
-            />
-            <ChatInput
-                onSend={onSend}
-                onStop={onStop}
-                isGenerating={chat.isResponseLoading || chat.isTyping}
-                isAtBottom={isAtBottom}
-                onScrollDown={scrollToBottom}
-            />
+            <div className="chat-container">
+                <MessageList
+                    messages={chat.messages}
+                    onRetry={onRetry}
+                    isResponseLoading={chat.isResponseLoading}
+                    error={chat?.error}
+                    bottomRef={bottomRef}
+                    isAtBottom={isAtBottom}
+                    setIsAtBottom={setIsAtBottom}
+                />
+                <ChatInput
+                    onSend={onSend}
+                    onStop={onStop}
+                    isGenerating={chat.isResponseLoading || chat.isTyping}
+                    isAtBottom={isAtBottom}
+                    onScrollDown={scrollToBottom}
+                />
+            </div>
         </div>
     );
 }

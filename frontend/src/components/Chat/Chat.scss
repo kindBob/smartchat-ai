@@ -2,20 +2,28 @@ $accent-color: #a5b68d;
 $send-button-width: 40px;
 
 .chat {
-    position: relative;
-
     height: 100vh;
     min-width: 0;
+
     flex: 1;
+
+    background: #222830;
+    color: #fff;
+    overflow: auto;
+}
+
+.chat-container {
+    position: relative;
+
+    max-width: 900px;
+
+    margin-left: auto;
+    margin-right: auto;
 
     display: flex;
     flex-direction: column;
 
     padding: 20px;
-
-    background: #222830;
-    color: #fff;
-    overflow: hidden;
 }
 
 .chat-input {
@@ -166,7 +174,7 @@ $send-button-width: 40px;
     flex-direction: column;
     gap: 14px;
 
-    padding: 0 15px 90px;
+    padding: 20px 15px 90px;
 
     overflow-y: auto;
 
@@ -195,7 +203,7 @@ $send-button-width: 40px;
     flex-direction: column;
 
     width: fit-content;
-    max-width: min(75%, 700px);
+    // max-width: min(75%, 700px);
 
     padding: 12px 15px;
 
