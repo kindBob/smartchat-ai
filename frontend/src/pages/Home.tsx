@@ -2,7 +2,7 @@ import { useState } from "react";
 import Chat from "../components/Chat/Chat";
 import { useChats } from "../hooks/useChats";
 import type { authClient } from "../auth";
-import { SquareMenu } from "lucide-react";
+import { SquareMenu, X } from "lucide-react";
 import { useChatGeneration } from "../hooks/useChatGeneration";
 import Sidebar from "../components/Sidebar/Sidebar";
 import LoadingScreen from "../components/LoadingScreen";
@@ -70,6 +70,10 @@ export default function Home({ user, onSignOut }: HomeProps) {
         <main className="home">
             <button className="mobile-menu-button" onClick={() => setIsSidebarOpen(true)} aria-label="Open sidebar">
                 <SquareMenu />
+            </button>
+
+            <button className="close-sidebar" onClick={() => setIsSidebarOpen(false)} aria-label="Close sidebar">
+                <X />
             </button>
 
             <Sidebar

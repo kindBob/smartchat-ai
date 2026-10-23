@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, type RefObject } from "react";
 import type { MessageType } from "../../types/Chat";
 import Message from "./Message";
 import LoadingResponseIndicator from "./LoadingResponseIndicator";
@@ -8,14 +8,36 @@ type MessageListProps = {
     isResponseLoading: boolean;
     error?: string;
     onRetry: () => void;
+    bottomRef: RefObject<HTMLDivElement | null>;
+    isAtBottom: boolean;
+    setIsAtBottom: (isAtBottom: boolean) => void;
 };
 
-function MessageList({ messages, isResponseLoading, error, onRetry }: MessageListProps) {
-    const bottomRef = useRef<HTMLDivElement | null>(null);
+function MessageList({
+    messages,
+    isResponseLoading,
+    error,
+    onRetry,
+    bottomRef,
+    isAtBottom,
+    setIsAtBottom,
+}: MessageListProps) {
+    useEffect(() => {
+        if (isAtBottom) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, isResponseLoading, error]);
 
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, isResponseLoading, error]);
+        const el = bottomRef.current;
+        if (!el) return;
+
+        const observer = new IntersectionObserver(([entry]) => {
+            setIsAtBottom(entry.isIntersecting);
+        });
+
+        observer.observe(el);
+
+        return () => observer.disconnect();
+    }, [bottomRef, setIsAtBottom]);
 
     return (
         <div className="message-list">
@@ -32,7 +54,7 @@ function MessageList({ messages, isResponseLoading, error, onRetry }: MessageLis
                     </button>
                 </div>
             )}
-            <div ref={bottomRef}></div>
+            <div ref={bottomRef} style={{ height: 1 }}></div>
         </div>
     );
 }

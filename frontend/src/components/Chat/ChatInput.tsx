@@ -1,28 +1,34 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Square } from "lucide-react";
+import { CircleChevronDown, Send, Square } from "lucide-react";
 import { useIsMobile } from "../../hooks/useIsMobile";
 
 type ChatInputProps = {
     onSend: (text: string) => void;
     onStop: () => void;
     isGenerating: boolean;
+    isAtBottom: boolean;
+    onScrollDown: () => void;
 };
 
-function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
+function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: ChatInputProps) {
     const [message, setMessage] = useState("");
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const scrollDownRef = useRef<HTMLButtonElement>(null);
     const MAX_TEXTAREA_HEIGHT = 120;
 
     const isMobile = useIsMobile();
 
     function resizeTextArea() {
         const textarea = textareaRef.current;
+        const scrollDown = scrollDownRef.current;
 
-        if (!textarea) return;
+        if (!textarea || !scrollDown) return;
 
         textarea.style.height = "auto";
         textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
+
+        scrollDown.style.top = Math.round((textarea.getBoundingClientRect().height * -1) / 2) + "px";
     }
 
     useEffect(() => {
@@ -38,6 +44,15 @@ function ChatInput({ onSend, onStop, isGenerating }: ChatInputProps) {
 
     return (
         <div className="chat-input">
+            <button
+                className={`scroll-down ${isAtBottom ? "--hidden" : ""}`}
+                ref={scrollDownRef}
+                onClick={onScrollDown}
+                aria-label="Scroll to bottom"
+                tabIndex={isAtBottom ? -1 : 0}>
+                <CircleChevronDown size={22} />
+            </button>
+
             <textarea
                 ref={textareaRef}
                 value={message}
