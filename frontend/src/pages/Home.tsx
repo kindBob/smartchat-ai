@@ -2,7 +2,7 @@ import { useState } from "react";
 import Chat from "../components/Chat/Chat";
 import { useChats } from "../hooks/useChats";
 import type { authClient } from "../auth";
-import { SquareMenu, X } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, SquareMenu } from "lucide-react";
 import { useChatGeneration } from "../hooks/useChatGeneration";
 import Sidebar from "../components/Sidebar/Sidebar";
 import LoadingScreen from "../components/LoadingScreen";
@@ -18,6 +18,7 @@ type HomeProps = {
 
 export default function Home({ user, onSignOut }: HomeProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
 
     const chatsState = useChats();
     const { chats, setChats, activeChat, activeChatId, isLoading, loadError } = chatsState;
@@ -71,9 +72,12 @@ export default function Home({ user, onSignOut }: HomeProps) {
             <button className="mobile-menu-button" onClick={() => setIsSidebarOpen(true)} aria-label="Open sidebar">
                 <SquareMenu />
             </button>
-
-            <button className="close-sidebar" onClick={() => setIsSidebarOpen(false)} aria-label="Close sidebar">
-                <X />
+            <button
+                className="desktop-sidebar-button"
+                onClick={() => setIsDesktopSidebarOpen((isOpen) => !isOpen)}
+                aria-label={isDesktopSidebarOpen ? "Close sidebar" : "Open sidebar"}
+                aria-expanded={isDesktopSidebarOpen}>
+                {isDesktopSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
             </button>
 
             <Sidebar
@@ -81,6 +85,7 @@ export default function Home({ user, onSignOut }: HomeProps) {
                 chats={chats}
                 activeChatId={activeChatId}
                 isSidebarOpen={isSidebarOpen}
+                isDesktopSidebarOpen={isDesktopSidebarOpen}
                 isCreatingChat={chatsState.isCreatingChat}
                 onNewChat={async () => {
                     await chatsState.createNewChat();
