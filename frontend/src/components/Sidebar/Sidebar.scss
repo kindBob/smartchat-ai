@@ -1,5 +1,30 @@
 $accent-color: #a5b68d;
 
+// Base style for buttons inside the sidebar only. :where() keeps the specificity
+// of a bare `button` selector so the more specific sidebar rules below still win.
+:where(.sidebar) button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #3535358b;
+    border: none;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+        background: #353535;
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+}
 .sidebar {
     width: 315px;
     min-width: 240px;
@@ -17,30 +42,6 @@ $accent-color: #a5b68d;
         min-width 0.25s ease,
         padding 0.25s ease,
         border-color 0.25s ease;
-
-    button {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        background: transparent;
-        border: none;
-        color: #fff;
-        font-size: 15px;
-        font-weight: 500;
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        transition: 0.2s ease;
-        cursor: pointer;
-
-        &:hover {
-            background: #353535;
-        }
-
-        &:active {
-            transform: scale(0.98);
-        }
-    }
 
     &__chats {
         height: max-content;
@@ -139,73 +140,21 @@ $accent-color: #a5b68d;
             max-width: 30%;
         }
 
+        // rendered in a portal on <body>; look comes from ActionsMenu.scss
         &-actions-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-
             position: fixed;
             width: max-content;
-            min-width: 140px;
-
             z-index: 1000;
-
-            background: #2f2f2f;
-            border: 1px solid #414141;
-            border-radius: 10px;
-            padding: 8px;
-
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-
-            button {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-
-                width: 100%;
-                padding: 10px 12px;
-
-                border: none;
-                border-radius: 8px;
-                background: transparent;
-
-                color: #fff;
-                font-size: 14px;
-                text-align: left;
-
-                transition: background-color 0.15s ease;
-
-                &:hover {
-                    background-color: #414141;
-                }
-            }
-        }
-
-        &-rename,
-        &-delete {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            cursor: pointer;
-        }
-
-        &-delete {
-            background-color: rgba(88, 47, 47, 0.395) !important;
-            color: rgb(255, 43, 43) !important;
-
-            svg {
-                color: red;
-            }
-        }
-
-        &-delete:hover {
-            background-color: rgba(122, 53, 53, 0.395) !important;
         }
 
         &-open,
         &-pin {
             padding: 0.3rem 0.37rem !important;
+        }
+
+        &-open:not(:hover),
+        &-pin:not(:hover) {
+            background: transparent;
         }
 
         &-pin {

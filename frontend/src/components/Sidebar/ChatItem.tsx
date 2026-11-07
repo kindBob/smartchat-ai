@@ -119,6 +119,7 @@ function ChatItem({
                     onPinChat(chat.id);
                 }}
                 onDelete={() => {
+                    onCloseActions();
                     onDeleteChat(chat.id);
                 }}
                 onToggleActions={() => {

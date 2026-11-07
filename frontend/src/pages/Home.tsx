@@ -7,6 +7,7 @@ import { useChatGeneration } from "../hooks/useChatGeneration";
 import Sidebar from "../components/Sidebar/Sidebar";
 import LoadingScreen from "../components/LoadingScreen";
 import LoadErrorScreen from "../components/LoadErrorScreen";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { createMessage } from "../utils/conversation";
 import "./Home.scss";
 
@@ -19,6 +20,7 @@ type HomeProps = {
 export default function Home({ user, onSignOut }: HomeProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+    const [chatIdToDelete, setChatIdToDelete] = useState<string | null>(null);
 
     const chatsState = useChats();
     const { chats, setChats, activeChat, activeChatId, isLoading, loadError } = chatsState;
@@ -48,6 +50,14 @@ export default function Home({ user, onSignOut }: HomeProps) {
 
         if (isFirstMessage) generateTitle(chatId, userMessage);
         generateAssistantResponse(chatId, userMessage);
+    }
+
+    // Deleting is permanent, so both the sidebar and the chat header ask for confirmation first
+    const chatToDelete = chats.find((c) => c.id === chatIdToDelete) ?? null;
+
+    function confirmDeleteChat() {
+        if (chatToDelete) chatsState.deleteChat(chatToDelete.id, stopTyping);
+        setChatIdToDelete(null);
     }
 
     function retryResponse() {
@@ -95,7 +105,7 @@ export default function Home({ user, onSignOut }: HomeProps) {
                     chatsState.selectChat(id);
                     setIsSidebarOpen(false);
                 }}
-                onDeleteChat={(id) => chatsState.deleteChat(id, stopTyping)}
+                onDeleteChat={setChatIdToDelete}
                 onRenameChat={chatsState.renameChat}
                 onPinChat={chatsState.togglePinChat}
                 onSignOut={onSignOut}
@@ -108,12 +118,27 @@ export default function Home({ user, onSignOut }: HomeProps) {
                     onSend={sendMessage}
                     onStop={() => activeChat && stopTyping(activeChat.id)}
                     onRetry={retryResponse}
+                    onPinChat={chatsState.togglePinChat}
+                    onRenameChat={chatsState.renameChat}
+                    onDeleteChat={setChatIdToDelete}
                 />
             ) : (
                 <div className="chat-empty">
                     <p>No chats yet.</p>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={chatToDelete !== null}
+                title="Delete chat?"
+                confirmLabel="Delete"
+                danger
+                onConfirm={confirmDeleteChat}
+                onCancel={() => setChatIdToDelete(null)}>
+                <p>
+                    This will permanently delete <strong>{chatToDelete?.title}</strong> and all of its messages.
+                </p>
+            </ConfirmDialog>
         </main>
     );
 }

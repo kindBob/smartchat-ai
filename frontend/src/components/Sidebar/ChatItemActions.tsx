@@ -1,6 +1,8 @@
-import { Pencil, Pin, PinOff, Settings, Trash } from "lucide-react";
+import { Pencil, Settings, Trash } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import PinButton from "../PinButton";
+import "../ActionsMenu.scss";
 
 type ChatItemActionsProps = {
     onRename: () => void;
@@ -76,7 +78,8 @@ function ChatItemActions({
                 createPortal(
                     <div
                         ref={menuRef}
-                        className="sidebar__chat-actions-container"
+                        className="sidebar__chat-actions-container actions-menu"
+                        role="menu"
                         style={{
                             position: "fixed",
                             top: menuPosition.top,
@@ -89,9 +92,11 @@ function ChatItemActions({
 
                                 onRename();
                             }}
-                            className="sidebar__chat-rename">
+                            type="button"
+                            role="menuitem"
+                            className="actions-menu__item">
+                            <Pencil size={18} />
                             Rename
-                            <Pencil size={22} />
                         </button>
 
                         <button
@@ -99,9 +104,11 @@ function ChatItemActions({
                                 e.stopPropagation();
                                 onDelete();
                             }}
-                            className="sidebar__chat-delete">
+                            type="button"
+                            role="menuitem"
+                            className="actions-menu__item --danger">
+                            <Trash size={18} />
                             Delete
-                            <Trash size={22} />
                         </button>
                     </div>,
                     document.body,
@@ -113,18 +120,16 @@ function ChatItemActions({
                     e.stopPropagation();
                     onToggleActions();
                 }}
-                className="sidebar__chat-open">
+                type="button"
+                className="sidebar__chat-open"
+                aria-label="Chat actions"
+                aria-haspopup="menu"
+                aria-expanded={actionsOpened}
+                title="Chat actions">
                 <Settings size={22} />
             </button>
 
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onPin();
-                }}
-                className="sidebar__chat-pin">
-                {pinned ? <PinOff size={22} /> : <Pin size={22} />}
-            </button>
+            <PinButton onPin={onPin} pinned={pinned} className="sidebar__chat-pin" />
         </div>
     );
 }
