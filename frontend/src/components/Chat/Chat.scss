@@ -2,6 +2,10 @@ $accent-color: #a5b68d;
 $send-button-width: 40px;
 
 .chat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
     height: 100vh;
     min-width: 0;
 
@@ -9,21 +13,115 @@ $send-button-width: 40px;
 
     background: #222830;
     color: #fff;
-    overflow: auto;
+    overflow: visible;
 }
 
-.chat-container {
-    position: relative;
-
-    max-width: 900px;
-
-    margin-left: auto;
-    margin-right: auto;
-
+.chat-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 
-    padding: 20px;
+    flex-shrink: 0;
+    height: 70px;
+
+    padding: 0 20px;
+
+    // when the desktop sidebar is closed, its toggle button (absolutely positioned in Home) sits over the header
+    .sidebar.--desktop-closed ~ .chat & {
+        padding-left: 70px;
+    }
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.15);
+
+    &__title {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1.3;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        flex-shrink: 0;
+    }
+
+    &__button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 40px;
+        height: 40px;
+        padding: 0;
+
+        border: none;
+        border-radius: 10px;
+
+        background: transparent;
+        color: rgba(255, 255, 255, 0.75);
+
+        cursor: pointer;
+        transition: 0.2s ease;
+
+        &:hover {
+            background: #303030;
+            color: #fff;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $accent-color;
+            outline-offset: 2px;
+        }
+
+        &.--pinned {
+            color: $accent-color;
+        }
+
+        &.--active {
+            background: #303030;
+            color: #fff;
+        }
+    }
+
+    &__input {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        padding: 4px 0;
+
+        font-family: inherit;
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: #fff;
+
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid $accent-color;
+        outline: none;
+    }
+
+    &__actions {
+        position: relative;
+    }
+
+    &__menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 30;
+    }
 }
 
 .chat-input {
@@ -98,7 +196,7 @@ $send-button-width: 40px;
         }
     }
 
-    button {
+    &__send-button {
         position: absolute;
 
         right: 20px;
@@ -111,34 +209,34 @@ $send-button-width: 40px;
 
         width: $send-button-width;
         height: 40px;
+        // the global button rule in Sidebar.scss adds padding that squeezes the icon
+        padding: 0;
 
         border: none;
         border-radius: 50%;
 
         background: $accent-color;
-        color: #fff;
+        color: #1f2618;
 
         cursor: pointer;
 
         transition: 0.2s ease;
 
         svg {
-            color: #fff;
+            flex-shrink: 0;
         }
 
+        // the Send icon's visual centre sits low-left
         svg.chat-input__send {
-            margin: 2px 4px 0 0;
-            height: 25px;
-            width: 25px;
-        }
-
-        svg.chat-input__stop {
-            height: 20px;
-            width: 20px;
+            margin: 1px 2px 0 0;
         }
 
         &:hover {
-            background: #92a478;
+            background: #b7c79f;
+        }
+
+        &:active {
+            transform: translateY(-50%) scale(0.95);
         }
     }
 }
@@ -166,15 +264,9 @@ $send-button-width: 40px;
 }
 
 .message-list {
-    width: 100%;
     min-width: 0;
+    min-height: 0;
     flex: 1;
-
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-
-    padding: 20px 15px 90px;
 
     overflow-y: auto;
 
@@ -195,6 +287,19 @@ $send-button-width: 40px;
         &:hover {
             background: rgba(165, 182, 141, 0.7);
         }
+    }
+
+    &-container {
+        max-width: 900px;
+        min-height: 100%;
+
+        margin: 0 auto;
+
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+
+        padding: 20px 15px 120px;
     }
 }
 
@@ -316,13 +421,42 @@ $send-button-width: 40px;
 }
 
 .scroll-down {
-    background-color: red;
     position: absolute;
+    // top is set in ChatInput.tsx so the button stays above the growing textarea
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 5;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+    padding: 0;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+
+    background: #2f3640;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+
+    cursor: pointer;
     transition: 0.2s ease;
+
+    svg {
+        flex-shrink: 0;
+    }
+
+    &:hover {
+        background: #3b4350;
+    }
+
+    &:active {
+        transform: translate(-50%, -50%) scale(0.95);
+    }
 
     &.--hidden {
         opacity: 0;
@@ -360,13 +494,20 @@ $send-button-width: 40px;
 }
 
 @media (max-width: 768px) {
-    .message-list {
-        padding-top: 55px;
+    .chat-container {
+        padding: 12px 12px 0;
+    }
+
+    .chat-header {
+        height: 75px;
+        padding: 0 12px 0 72px;
+
+        &__title {
+            font-size: 16px;
+        }
     }
 
     .chat-input {
-        bottom: 12px;
-
         width: calc(100% - 20px);
 
         border-radius: 17px;
@@ -376,7 +517,7 @@ $send-button-width: 40px;
             padding: 8px calc($send-button-width + 8px) 8px 10px;
         }
 
-        button {
+        &__send-button {
             right: 15px;
             width: 38px;
             height: 38px;
@@ -395,14 +536,6 @@ $send-button-width: 40px;
         &__time {
             font-size: 10px;
         }
-    }
-
-    .chat {
-        width: 100%;
-        min-width: 0;
-        height: 100dvh;
-
-        padding: 20px 10px;
     }
 }
 

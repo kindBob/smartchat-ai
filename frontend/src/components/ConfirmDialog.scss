@@ -1,0 +1,110 @@
+.confirm-dialog {
+    width: min(400px, calc(100% - 32px));
+    margin: auto;
+    padding: 0;
+
+    border: 1px solid #414141;
+    border-radius: 14px;
+
+    background: #2f2f2f;
+    color: #fff;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+    &[open] {
+        animation: confirmDialogAppear 0.15s ease-out;
+    }
+
+    &::backdrop {
+        background: rgba(5, 5, 5, 0.6);
+    }
+
+    &__content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        padding: 22px 22px 18px;
+    }
+
+    &__title {
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    &__message {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #c9c9c9;
+        overflow-wrap: anywhere;
+
+        strong {
+            color: #fff;
+            font-weight: 600;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+
+        margin-top: 10px;
+    }
+
+    &__button {
+        padding: 9px 16px;
+
+        border: 1px solid #4a4a4a;
+        border-radius: 8px;
+        background: transparent;
+        color: #fff;
+
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
+
+        cursor: pointer;
+        transition: 0.15s ease;
+
+        &:hover {
+            background: #414141;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #a5b68d;
+            outline-offset: 2px;
+        }
+
+        &.--primary {
+            border-color: transparent;
+            background: #a5b68d;
+            color: #1f2618;
+
+            &:hover {
+                background: #b7c79f;
+            }
+        }
+
+        &.--danger {
+            border-color: transparent;
+            background: #c94a4a;
+
+            &:hover {
+                background: #d85c5c;
+            }
+        }
+    }
+}
+
+@keyframes confirmDialogAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

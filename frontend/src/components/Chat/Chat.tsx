@@ -3,19 +3,23 @@ import ChatInput from "./ChatInput";
 import type { ChatType } from "../../types/Chat";
 import "./Chat.scss";
 import { useRef, useState } from "react";
+import ChatHeader from "./ChatHeader";
 
 type ChatProps = {
     chat: ChatType | undefined;
     onSend: (userMessage: string) => void;
     onStop: () => void;
     onRetry: () => void;
+    onPinChat: (id: string) => void;
+    onRenameChat: (id: string, newTitle: string) => void;
+    onDeleteChat: (id: string) => void;
 };
 
-function Chat({ chat, onSend, onStop, onRetry }: ChatProps) {
-    if (!chat) return null;
-
+function Chat({ chat, onSend, onStop, onRetry, onPinChat, onRenameChat, onDeleteChat }: ChatProps) {
     const [isAtBottom, setIsAtBottom] = useState(true);
     const bottomRef = useRef<HTMLDivElement | null>(null);
+
+    if (!chat) return null;
 
     function scrollToBottom() {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -23,24 +27,29 @@ function Chat({ chat, onSend, onStop, onRetry }: ChatProps) {
 
     return (
         <div className="chat">
-            <div className="chat-container">
-                <MessageList
-                    messages={chat.messages}
-                    onRetry={onRetry}
-                    isResponseLoading={chat.isResponseLoading}
-                    error={chat?.error}
-                    bottomRef={bottomRef}
-                    isAtBottom={isAtBottom}
-                    setIsAtBottom={setIsAtBottom}
-                />
-                <ChatInput
-                    onSend={onSend}
-                    onStop={onStop}
-                    isGenerating={chat.isResponseLoading || chat.isTyping}
-                    isAtBottom={isAtBottom}
-                    onScrollDown={scrollToBottom}
-                />
-            </div>
+            <ChatHeader
+                title={chat.title}
+                pinned={chat.pinnedAt !== null}
+                onPin={() => onPinChat(chat.id)}
+                onRename={(newTitle) => onRenameChat(chat.id, newTitle)}
+                onDelete={() => onDeleteChat(chat.id)}
+            />
+            <MessageList
+                messages={chat.messages}
+                onRetry={onRetry}
+                isResponseLoading={chat.isResponseLoading}
+                error={chat?.error}
+                bottomRef={bottomRef}
+                isAtBottom={isAtBottom}
+                setIsAtBottom={setIsAtBottom}
+            />
+            <ChatInput
+                onSend={onSend}
+                onStop={onStop}
+                isGenerating={chat.isResponseLoading || chat.isTyping}
+                isAtBottom={isAtBottom}
+                onScrollDown={scrollToBottom}
+            />
         </div>
     );
 }

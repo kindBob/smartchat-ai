@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CircleChevronDown, Send, Square } from "lucide-react";
+import { ArrowDown, Send, Square } from "lucide-react";
 import { useIsMobile } from "../../hooks/useIsMobile";
 
 type ChatInputProps = {
@@ -45,12 +45,13 @@ function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: C
     return (
         <div className="chat-input">
             <button
+                type="button"
                 className={`scroll-down ${isAtBottom ? "--hidden" : ""}`}
                 ref={scrollDownRef}
                 onClick={onScrollDown}
                 aria-label="Scroll to bottom"
                 tabIndex={isAtBottom ? -1 : 0}>
-                <CircleChevronDown size={25} />
+                <ArrowDown size={20} strokeWidth={2.25} />
             </button>
 
             <textarea
@@ -74,6 +75,8 @@ function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: C
             />
 
             <button
+                type="button"
+                className="chat-input__send-button"
                 onClick={() => {
                     if (isGenerating) {
                         onStop();
@@ -83,7 +86,11 @@ function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: C
                     sendMessage();
                 }}
                 aria-label={isGenerating ? "Stop generating" : "Send message"}>
-                {isGenerating ? <Square className="chat-input__stop" /> : <Send className="chat-input__send" />}
+                {isGenerating ? (
+                    <Square size={16} fill="currentColor" className="chat-input__stop" />
+                ) : (
+                    <Send size={20} strokeWidth={2.25} className="chat-input__send" />
+                )}
             </button>
         </div>
     );

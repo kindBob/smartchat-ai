@@ -41,19 +41,22 @@ function MessageList({
 
     return (
         <div className="message-list">
-            {messages.map((message) => {
-                return <Message key={message.id} {...message} />;
-            })}
+            <div className="message-list-container">
+                {messages.map((message) => {
+                    return <Message key={message.id} {...message} />;
+                })}
 
-            {isResponseLoading && <LoadingResponseIndicator />}
-            {error && (
-                <div className="chat-error">
-                    <div className="chat-error__message">{error}</div>
-                    <button onClick={onRetry} className="chat-error__button">
-                        Try again
-                    </button>
-                </div>
-            )}
+                {isResponseLoading && <LoadingResponseIndicator />}
+                {error && (
+                    <div className="chat-error">
+                        <div className="chat-error__message">{error}</div>
+                        <button onClick={onRetry} className="chat-error__button">
+                            Try again
+                        </button>
+                    </div>
+                )}
+            </div>
+
             <div ref={bottomRef} style={{ height: 1 }}></div>
         </div>
     );
