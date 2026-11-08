@@ -1,4 +1,4 @@
-import { ApiError, type ChatResponse } from "../types/Api";
+import { ApiError, type ChatResponse, type ChatSummaryResponse, type MessageResponse } from "../types/Api";
 import { authFetch } from "./authFetch";
 
 const BASE_ENDPOINT = "/chats";
@@ -18,10 +18,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
     return data as T;
 }
 
-export async function fetchChats(): Promise<ChatResponse[]> {
+export async function fetchChats(): Promise<ChatSummaryResponse[]> {
     const request = await authFetch(BASE_ENDPOINT);
 
-    return handleResponse<ChatResponse[]>(request);
+    return handleResponse<ChatSummaryResponse[]>(request);
+}
+
+export async function fetchChatMessages(chatId: string): Promise<MessageResponse[]> {
+    const request = await authFetch(`${BASE_ENDPOINT}/${chatId}/messages`);
+
+    return handleResponse<MessageResponse[]>(request);
 }
 
 export async function createChat(title: string): Promise<ChatResponse> {
@@ -75,8 +81,9 @@ export async function fetchChatTitle(chatId: string, message: string): Promise<s
 export async function fetchAssistantResponse(
     chatId: string,
     userText: string,
+    requestId: string,
     controller: AbortController,
-): Promise<string> {
+): Promise<string | null> {
     const request = await authFetch(`${BASE_ENDPOINT}/${chatId}/messages`, {
         method: "POST",
         headers: {
@@ -85,10 +92,20 @@ export async function fetchAssistantResponse(
         signal: controller.signal,
         body: JSON.stringify({
             text: userText,
+            requestId,
         }),
     });
 
-    const data = await handleResponse<{ response: string }>(request);
+    // null means the request was stopped and no reply was saved
+    const data = await handleResponse<{ response: string | null }>(request);
 
     return data.response;
+}
+
+export async function stopAssistantResponse(chatId: string, requestId: string): Promise<void> {
+    const request = await authFetch(`${BASE_ENDPOINT}/${chatId}/messages/${requestId}/stop`, {
+        method: "POST",
+    });
+
+    await handleResponse<null>(request);
 }

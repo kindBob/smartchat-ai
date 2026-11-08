@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useLayoutEffect, useRef, type RefObject } from "react";
 import type { MessageType } from "../../types/Chat";
 import Message from "./Message";
 import LoadingResponseIndicator from "./LoadingResponseIndicator";
@@ -13,6 +13,8 @@ type MessageListProps = {
     setIsAtBottom: (isAtBottom: boolean) => void;
 };
 
+const AT_BOTTOM_THRESHOLD_PX = 80;
+
 function MessageList({
     messages,
     isResponseLoading,
@@ -22,25 +24,34 @@ function MessageList({
     isAtBottom,
     setIsAtBottom,
 }: MessageListProps) {
-    useEffect(() => {
-        if (isAtBottom) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const listRef = useRef<HTMLDivElement>(null);
+    const lastScrollTopRef = useRef(0);
+
+    // Scrolls before paint, so new content can't push the list away from the bottom between typing ticks
+    useLayoutEffect(() => {
+        const list = listRef.current;
+        if (!list || !isAtBottom) return;
+
+        list.scrollTop = list.scrollHeight;
+        lastScrollTopRef.current = list.scrollTop;
     }, [messages, isResponseLoading, error]);
 
-    useEffect(() => {
-        const el = bottomRef.current;
-        if (!el) return;
+    function handleScroll() {
+        const list = listRef.current;
+        if (!list) return;
 
-        const observer = new IntersectionObserver(([entry]) => {
-            setIsAtBottom(entry.isIntersecting);
-        });
+        const distanceFromBottom = list.scrollHeight - list.scrollTop - list.clientHeight;
+        const scrolledUp = list.scrollTop < lastScrollTopRef.current;
+        lastScrollTopRef.current = list.scrollTop;
 
-        observer.observe(el);
-
-        return () => observer.disconnect();
-    }, [bottomRef, setIsAtBottom]);
+        // Any upward scroll leaves the bottom, however small. The threshold only applies when coming back down.
+        // The 1px allows for fractional scroll positions, and for content shrinking while at the bottom.
+        if (scrolledUp && distanceFromBottom > 1) setIsAtBottom(false);
+        else if (distanceFromBottom <= AT_BOTTOM_THRESHOLD_PX) setIsAtBottom(true);
+    }
 
     return (
-        <div className="message-list">
+        <div className="message-list" ref={listRef} onScroll={handleScroll}>
             <div className="message-list-container">
                 {messages.map((message) => {
                     return <Message key={message.id} {...message} />;

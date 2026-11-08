@@ -36,10 +36,7 @@ function Sidebar({
 }: SidebarProps) {
     const [openedActionsChatId, setOpenedActionsChatId] = useState<string | null>(null);
 
-    const pinnedChats = chats
-        .filter((c) => c.pinnedAt)
-        .sort((a, b) => b.pinnedAt!.localeCompare(a.pinnedAt!))
-        .sort((a, b) => b.lastMessageAt.localeCompare(a.lastMessageAt));
+    const pinnedChats = chats.filter((c) => c.pinnedAt).sort((a, b) => b.pinnedAt!.localeCompare(a.pinnedAt!));
 
     const recentChats = chats.filter((c) => !c.pinnedAt).sort((a, b) => b.lastMessageAt.localeCompare(a.lastMessageAt));
 

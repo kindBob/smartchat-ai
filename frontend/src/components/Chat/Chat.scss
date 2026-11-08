@@ -209,7 +209,6 @@ $send-button-width: 40px;
 
         width: $send-button-width;
         height: 40px;
-        // the global button rule in Sidebar.scss adds padding that squeezes the icon
         padding: 0;
 
         border: none;
@@ -308,7 +307,8 @@ $send-button-width: 40px;
     flex-direction: column;
 
     width: fit-content;
-    // max-width: min(75%, 700px);
+    // fit-content alone lets wide code blocks and tables stretch the bubble past the container
+    max-width: 100%;
 
     padding: 12px 15px;
 

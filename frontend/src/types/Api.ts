@@ -10,7 +10,15 @@ export class ApiError extends Error {
     }
 }
 
-export type ChatResponse = {
+export type MessageResponse = {
+    id: string;
+    text: string;
+    role: "USER" | "MODEL";
+    chatId: string;
+    createdAt: string;
+};
+
+type ChatFields = {
     id: string;
     title: string;
     userId: string;
@@ -18,11 +26,12 @@ export type ChatResponse = {
     updatedAt: string;
     pinnedAt: string | null;
     lastMessageAt: string;
-    messages: {
-        id: string;
-        text: string;
-        role: "USER" | "MODEL";
-        chatId: string;
-        createdAt: string;
-    }[];
+};
+
+export type ChatResponse = ChatFields & {
+    messages: MessageResponse[];
+};
+
+export type ChatSummaryResponse = ChatFields & {
+    hasUserMessages: boolean;
 };

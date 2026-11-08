@@ -1,6 +1,6 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import type { ChatType } from "../types/Chat";
-import { fetchAssistantResponse, fetchChatTitle } from "../api/chatApi";
+import { fetchAssistantResponse, fetchChatTitle, stopAssistantResponse } from "../api/chatApi";
 import { ApiError } from "../types/Api";
 import { createMessage } from "../utils/conversation";
 
@@ -12,34 +12,45 @@ const TYPING_TICK_MS = 20;
 const TYPING_TARGET_MS = 1500; // long replies finish in about this time
 const MIN_CHARS_PER_TICK = 2;
 
+type TypingAnimation = {
+    interval: ReturnType<typeof setInterval>;
+    messageId: string;
+    fullText: string;
+};
+
+type ActiveRequest = {
+    requestId: string;
+    controller: AbortController;
+};
+
 export function useChatGeneration({ setChats }: UseChatGenerationProps) {
-    const controllersRef = useRef(new Map<string, AbortController>());
-    const intervalsRef = useRef(new Map<string, ReturnType<typeof setInterval>>());
+    const requestsRef = useRef(new Map<string, ActiveRequest>());
+    const typingRef = useRef(new Map<string, TypingAnimation>());
 
     function updateChat(chatId: string, update: (chat: ChatType) => ChatType) {
         setChats((prev) => prev.map((chat) => (chat.id === chatId ? update(chat) : chat)));
     }
 
     function clearTyping(chatId: string) {
-        const interval = intervalsRef.current.get(chatId);
-        if (interval) clearInterval(interval);
-        intervalsRef.current.delete(chatId);
+        const typing = typingRef.current.get(chatId);
+        if (typing) clearInterval(typing.interval);
+        typingRef.current.delete(chatId);
     }
 
     function abortRequest(chatId: string) {
-        controllersRef.current.get(chatId)?.abort();
-        controllersRef.current.delete(chatId);
+        requestsRef.current.get(chatId)?.controller.abort();
+        requestsRef.current.delete(chatId);
     }
 
     useEffect(() => {
-        const controllers = controllersRef.current;
-        const intervals = intervalsRef.current;
+        const requests = requestsRef.current;
+        const typingAnimations = typingRef.current;
 
         return () => {
-            controllers.forEach((controller) => controller.abort());
-            intervals.forEach((interval) => clearInterval(interval));
-            controllers.clear();
-            intervals.clear();
+            requests.forEach((request) => request.controller.abort());
+            typingAnimations.forEach((typing) => clearInterval(typing.interval));
+            requests.clear();
+            typingAnimations.clear();
         };
     }, []);
 
@@ -71,18 +82,30 @@ export function useChatGeneration({ setChats }: UseChatGenerationProps) {
             if (done) clearTyping(chatId);
         }, TYPING_TICK_MS);
 
-        intervalsRef.current.set(chatId, interval);
+        typingRef.current.set(chatId, { interval, messageId, fullText });
     }
 
     async function generateAssistantResponse(chatId: string, userText: string) {
         abortRequest(chatId);
         clearTyping(chatId);
 
-        const controller = new AbortController();
-        controllersRef.current.set(chatId, controller);
+        const request: ActiveRequest = { requestId: crypto.randomUUID(), controller: new AbortController() };
+        requestsRef.current.set(chatId, request);
 
         try {
-            const aiResponse = await fetchAssistantResponse(chatId, userText, controller);
+            const aiResponse = await fetchAssistantResponse(chatId, userText, request.requestId, request.controller);
+
+            if (aiResponse === null) return;
+
+            if (requestsRef.current.get(chatId) !== request) {
+                // Stop arrived after the reply was saved, so show it to match what a reload would show
+                updateChat(chatId, (chat) => ({
+                    ...chat,
+                    messages: [...chat.messages, createMessage(aiResponse, "assistant")],
+                }));
+                return;
+            }
+
             const assistantMessage = createMessage("", "assistant");
 
             updateChat(chatId, (chat) => ({
@@ -95,7 +118,8 @@ export function useChatGeneration({ setChats }: UseChatGenerationProps) {
 
             startTypingAnimation(chatId, assistantMessage.id, aiResponse);
         } catch (error) {
-            if (error instanceof DOMException && error.name === "AbortError") return;
+            // Stopped or replaced while waiting, so this result no longer matters
+            if (requestsRef.current.get(chatId) !== request) return;
 
             if (error instanceof ApiError) {
                 console.error("API error:", error.message);
@@ -112,20 +136,34 @@ export function useChatGeneration({ setChats }: UseChatGenerationProps) {
             console.error("Unexpected error:", error);
             setChatError(chatId, "Sorry, something went wrong.");
         } finally {
-            if (controllersRef.current.get(chatId) === controller) {
-                controllersRef.current.delete(chatId);
+            if (requestsRef.current.get(chatId) === request) {
+                requestsRef.current.delete(chatId);
             }
         }
     }
 
     function stopTyping(chatId: string) {
-        abortRequest(chatId);
+        const typing = typingRef.current.get(chatId);
+        const request = requestsRef.current.get(chatId);
+
+        // The message request stays open so it always reaches the server, which needs it to save the user's message
+        requestsRef.current.delete(chatId);
         clearTyping(chatId);
+
+        if (request) {
+            stopAssistantResponse(chatId, request.requestId).catch((error) => {
+                console.error("Error stopping response:", error);
+            });
+        }
 
         updateChat(chatId, (chat) => ({
             ...chat,
             isTyping: false,
             isResponseLoading: false,
+            // A reply being typed out is already saved, so show all of it to match what a reload would show
+            messages: typing
+                ? chat.messages.map((m) => (m.id === typing.messageId ? { ...m, text: typing.fullText } : m))
+                : chat.messages,
         }));
     }
 

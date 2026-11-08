@@ -63,13 +63,18 @@ function ChatItem({
     function handleRename() {
         const newTitle = chatTitle.trim();
 
-        if (newTitle !== "") {
+        if (newTitle !== "" && newTitle !== chat.title) {
             onRenameChat(chat.id, newTitle);
-            setChatTitle(newTitle);
         }
 
         setIsRenaming(false);
         onCloseActions();
+    }
+
+    function startRename() {
+        // The title may have changed since the last rename (generated, renamed in the header, or a failed save)
+        setChatTitle(chat.title);
+        setIsRenaming(true);
     }
 
     function cancelRename() {
@@ -113,7 +118,7 @@ function ChatItem({
 
             <ChatItemActions
                 menuRef={menuRef}
-                onRename={() => (!isRenaming ? setIsRenaming(true) : handleRename())}
+                onRename={() => (!isRenaming ? startRename() : handleRename())}
                 onPin={() => {
                     isRenaming && setIsRenaming(false);
                     onPinChat(chat.id);

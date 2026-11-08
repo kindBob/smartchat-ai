@@ -14,4 +14,7 @@ export type ChatType = {
     isResponseLoading: boolean;
     error?: string;
     messages: MessageType[];
+    // Messages load when a chat is first opened, so `messages` is empty until this is "loaded"
+    messagesStatus: "idle" | "loading" | "loaded" | "error";
+    hasUserMessages: boolean;
 };

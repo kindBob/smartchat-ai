@@ -28,7 +28,8 @@ export default function Home({ user, onSignOut }: HomeProps) {
     const { generateAssistantResponse, generateTitle, stopTyping } = useChatGeneration({ setChats });
 
     function sendMessage(userMessage: string) {
-        if (!activeChat || activeChat.isResponseLoading || activeChat.isTyping) return;
+        if (!activeChat || activeChat.messagesStatus !== "loaded") return;
+        if (activeChat.isResponseLoading || activeChat.isTyping) return;
 
         const chatId = activeChat.id;
         const isFirstMessage = activeChat.title === "New Chat";
@@ -114,10 +115,12 @@ export default function Home({ user, onSignOut }: HomeProps) {
 
             {activeChat ? (
                 <Chat
+                    key={activeChat.id}
                     chat={activeChat}
                     onSend={sendMessage}
                     onStop={() => activeChat && stopTyping(activeChat.id)}
                     onRetry={retryResponse}
+                    onRetryLoad={() => chatsState.loadMessages(activeChat.id)}
                     onPinChat={chatsState.togglePinChat}
                     onRenameChat={chatsState.renameChat}
                     onDeleteChat={setChatIdToDelete}

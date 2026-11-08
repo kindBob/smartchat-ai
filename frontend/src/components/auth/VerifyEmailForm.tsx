@@ -55,12 +55,17 @@ function VerifyEmailForm({ email, password, onAuthSuccess, onBackToAuth, onBack 
 
             setSuccess("Your email has been verified. Signing you in...");
 
-            const signInResult = await authClient.signIn.email({
-                email: normalizedEmail,
-                password,
-            });
+            // The auth client throws on error responses, so a failed sign-in needs its own catch
+            try {
+                const signInResult = await authClient.signIn.email({
+                    email: normalizedEmail,
+                    password,
+                });
 
-            if (signInResult.error) {
+                if (signInResult.error) throw signInResult.error;
+            } catch (err) {
+                console.error("Automatic sign-in error:", err);
+
                 setSuccess(null);
                 setError("Your email is verified, but automatic sign-in failed. Please sign in manually.");
                 return;
@@ -70,6 +75,7 @@ function VerifyEmailForm({ email, password, onAuthSuccess, onBackToAuth, onBack 
         } catch (err) {
             console.error("Email verification error:", err);
 
+            setSuccess(null);
             setError(getErrorMessage(err, "Verification failed. Please try again."));
         } finally {
             setLoading(false);

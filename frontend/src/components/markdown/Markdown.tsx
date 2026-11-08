@@ -1,4 +1,4 @@
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeRaw from "rehype-raw";
@@ -8,6 +8,7 @@ import rehypeHighlight from "rehype-highlight";
 import { visit } from "unist-util-visit";
 import type { Root } from "hast";
 import CodeBlock from "./CodeBlock";
+import "katex/dist/katex.min.css";
 import "./Markdown.scss";
 import "highlight.js/styles/atom-one-dark.css";
 
@@ -50,16 +51,26 @@ const schema: Options = {
     },
 };
 
+const remarkPlugins: ReactMarkdownOptions["remarkPlugins"] = [remarkGfm, remarkMath];
+
+const rehypePlugins: ReactMarkdownOptions["rehypePlugins"] = [
+    rehypeRaw,
+    rehypeSafeStyle,
+    [rehypeSanitize, schema],
+    rehypeKatex,
+    rehypeHighlight,
+];
+
+// Defined once: new component functions on each render would make React remount every code block
+const components: Components = {
+    a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+    pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
+};
+
 function Markdown({ content }: MarkdownProps) {
     return (
         <div className="markdown">
-            <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw, rehypeSafeStyle, [rehypeSanitize, schema], rehypeKatex, rehypeHighlight]}
-                components={{
-                    a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
-                    pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
-                }}>
+            <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components}>
                 {content}
             </ReactMarkdown>
         </div>

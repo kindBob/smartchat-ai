@@ -13,12 +13,15 @@ import { Prisma } from "../generated/prisma/client.js";
 
 const MAX_PINNED_CHATS = 5;
 const HISTORY_LIMIT = 30;
+const DEFAULT_CHAT_TITLE = "New Chat";
+const EARLY_STOP_TTL_MS = 60_000;
 
 @Injectable()
 export class ChatService {
     private readonly ai: GoogleGenAI;
     private readonly model: string;
     private readonly logger = new Logger(ChatService.name);
+    private readonly generations = new Map<string, AbortController>();
 
     constructor(
         private readonly configService: ConfigService,
@@ -31,7 +34,47 @@ export class ChatService {
         this.model = this.configService.getOrThrow<string>("GEMINI_MODEL");
     }
 
-    async generateResponse(userId: string, chatId: string, text: string) {
+    /** Returns null if the request was stopped through stopGeneration: only the user's message is saved. */
+    async generateResponse(userId: string, chatId: string, text: string, requestId?: string) {
+        const key = requestId && this.generationKey(userId, chatId, requestId);
+
+        // Reuses the already-aborted controller when the stop request got here first
+        const generation = (key && this.generations.get(key)) || new AbortController();
+        if (key) this.generations.set(key, generation);
+
+        try {
+            return await this.runGeneration(userId, chatId, text, generation.signal);
+        } finally {
+            if (key) this.generations.delete(key);
+        }
+    }
+
+    stopGeneration(userId: string, chatId: string, requestId: string) {
+        const key = this.generationKey(userId, chatId, requestId);
+        const generation = this.generations.get(key);
+
+        if (generation) {
+            generation.abort();
+            return;
+        }
+
+        // The stop can overtake its message request while that is still in the guards, so remember it for a while
+        const stopped = new AbortController();
+        stopped.abort();
+        this.generations.set(key, stopped);
+
+        setTimeout(() => {
+            if (this.generations.get(key) === stopped) this.generations.delete(key);
+        }, EARLY_STOP_TTL_MS).unref();
+    }
+
+    private generationKey(userId: string, chatId: string, requestId: string) {
+        return `${userId}:${chatId}:${requestId}`;
+    }
+
+    private async runGeneration(userId: string, chatId: string, text: string, signal: AbortSignal) {
+        const receivedAt = new Date();
+
         const chat = await this.prisma.chat.findFirst({
             where: { id: chatId, userId },
             select: { id: true },
@@ -57,15 +100,32 @@ export class ChatService {
             { role: "user", parts: [{ text }] },
         ];
 
-        let response: string;
+        let response = "";
 
         try {
-            const aiResponse = await this.ai.models.generateContent({ model: this.model, contents });
+            signal.throwIfAborted();
+
+            const aiResponse = await this.ai.models.generateContent({
+                model: this.model,
+                contents,
+                config: { abortSignal: signal },
+            });
             response = aiResponse.text?.trim() ?? "";
             if (!response) throw new Error("Empty AI response");
         } catch (error) {
-            this.logger.error("Gemini API error", error);
-            throw new InternalServerErrorException("Failed to generate AI response.");
+            if (!signal.aborted) {
+                this.logger.error("Gemini API error", error);
+                throw new InternalServerErrorException("Failed to generate AI response.");
+            }
+        }
+
+        if (signal.aborted) {
+            await this.prisma.$transaction([
+                this.prisma.message.create({ data: { text, role: "USER", chatId, createdAt: receivedAt } }),
+                this.prisma.chat.update({ where: { id: chatId }, data: { lastMessageAt: receivedAt } }),
+            ]);
+
+            return null;
         }
 
         const userAt = new Date();
@@ -93,6 +153,9 @@ export class ChatService {
                 throw new NotFoundException("Chat not found");
             }
 
+            // Already titled, so there's nothing to spend a Gemini call on
+            if (chat.title !== DEFAULT_CHAT_TITLE) return chat.title;
+
             const aiResponse = await this.ai.interactions.create({
                 model: this.model,
                 input: `Generate a short title for this message.
@@ -112,19 +175,28 @@ export class ChatService {
                 throw new Error("Empty title returned");
             }
 
+            // Only replace the default title, so a rename made during generation isn't overwritten
             const result = await this.prisma.chat.updateMany({
                 where: {
                     id: chatId,
                     userId,
+                    title: DEFAULT_CHAT_TITLE,
                 },
                 data: {
                     title,
                 },
             });
 
-            if (result.count === 0) throw new NotFoundException("Chat not found");
+            if (result.count > 0) return title;
 
-            return title;
+            const current = await this.prisma.chat.findFirst({
+                where: { id: chatId, userId },
+                select: { title: true },
+            });
+
+            if (!current) throw new NotFoundException("Chat not found");
+
+            return current.title;
         } catch (error) {
             if (error instanceof NotFoundException) throw error;
 
@@ -205,15 +277,28 @@ export class ChatService {
         });
     }
 
-    private findChats(userId: string) {
-        return this.prisma.chat.findMany({
+    /** Lists chats without their messages, which are loaded per chat through getChatMessages. */
+    async getUserChats(userId: string) {
+        const chats = await this.prisma.chat.findMany({
             where: { userId },
-            include: { messages: { orderBy: { createdAt: "asc" } } },
+            include: { _count: { select: { messages: { where: { role: "USER" } } } } },
             orderBy: [{ pinnedAt: { sort: "desc", nulls: "last" } }, { lastMessageAt: "desc" }],
         });
+
+        return chats.map(({ _count, ...chat }) => ({ ...chat, hasUserMessages: _count.messages > 0 }));
     }
 
-    async getUserChats(userId: string) {
-        return this.findChats(userId);
+    async getChatMessages(userId: string, chatId: string) {
+        const chat = await this.prisma.chat.findFirst({
+            where: { id: chatId, userId },
+            select: { id: true },
+        });
+
+        if (!chat) throw new NotFoundException("Chat not found.");
+
+        return this.prisma.message.findMany({
+            where: { chatId },
+            orderBy: { createdAt: "asc" },
+        });
     }
 }

@@ -6,11 +6,12 @@ type ChatInputProps = {
     onSend: (text: string) => void;
     onStop: () => void;
     isGenerating: boolean;
+    canSend: boolean;
     isAtBottom: boolean;
     onScrollDown: () => void;
 };
 
-function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: ChatInputProps) {
+function ChatInput({ onSend, onStop, isGenerating, canSend, isAtBottom, onScrollDown }: ChatInputProps) {
     const [message, setMessage] = useState("");
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -36,7 +37,7 @@ function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: C
     }, [message]);
 
     function sendMessage() {
-        if (!message.trim() || isGenerating) return;
+        if (!message.trim() || isGenerating || !canSend) return;
 
         onSend(message);
         setMessage("");
@@ -61,6 +62,9 @@ function ChatInput({ onSend, onStop, isGenerating, isAtBottom, onScrollDown }: C
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key !== "Enter") return;
+
+                    // Enter here confirms an IME conversion rather than sending. Safari reports it through keyCode 229.
+                    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
 
                     if (isMobile) return;
 

@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Post, UseGuards, Request, Param, Delete, Patch } from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Get,
+    HttpCode,
+    ParseUUIDPipe,
+    Post,
+    UseGuards,
+    Request,
+    Param,
+    Delete,
+    Patch,
+} from "@nestjs/common";
 import { ChatService } from "./chat.service.js";
 import { GenerateTitleDto } from "./dto/generate-title.dto.js";
 import { SendMessageDto } from "./dto/send-message.dto.js";
@@ -18,6 +30,12 @@ export class ChatController {
         return this.chatService.getUserChats(request.user.id);
     }
 
+    @Get(":id/messages")
+    async getChatMessages(@Request() request: AuthenticatedRequest, @Param("id") chatId: string) {
+        return this.chatService.getChatMessages(request.user.id, chatId);
+    }
+
+    @UseGuards(CustomThrottlerGuard)
     @Post()
     async createChat(@Request() request: AuthenticatedRequest, @Body() dto: CreateChatDto) {
         return this.chatService.createChat(request.user.id, dto.title);
@@ -37,6 +55,7 @@ export class ChatController {
         return this.chatService.deleteChat(request.user.id, chatId);
     }
 
+    @UseGuards(CustomThrottlerGuard)
     @Post(":id/title")
     async generateTitle(
         @Request() request: AuthenticatedRequest,
@@ -57,10 +76,21 @@ export class ChatController {
         @Param("id") chatId: string,
         @Body() dto: SendMessageDto,
     ) {
-        const response = await this.chatService.generateResponse(request.user.id, chatId, dto.text);
+        const response = await this.chatService.generateResponse(request.user.id, chatId, dto.text, dto.requestId);
 
         return {
             response,
         };
+    }
+
+    @UseGuards(CustomThrottlerGuard)
+    @HttpCode(204)
+    @Post(":id/messages/:requestId/stop")
+    stopGeneration(
+        @Request() request: AuthenticatedRequest,
+        @Param("id") chatId: string,
+        @Param("requestId", ParseUUIDPipe) requestId: string,
+    ) {
+        this.chatService.stopGeneration(request.user.id, chatId, requestId);
     }
 }

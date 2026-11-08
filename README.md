@@ -130,14 +130,16 @@ All routes require a valid Neon Auth Bearer token.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `GET` | `/chats` | List the current user's chats and messages |
+| `GET` | `/chats` | List the current user's chats, without messages |
+| `GET` | `/chats/:id/messages` | List a chat's messages |
 | `POST` | `/chats` | Create a chat |
 | `PATCH` | `/chats/:id` | Rename a chat | Pin a chat |
 | `DELETE` | `/chats/:id` | Delete a chat and its messages |
 | `POST` | `/chats/:id/title` | Generate and save a chat title |
 | `POST` | `/chats/:id/messages` | Generate an assistant response |
+| `POST` | `/chats/:id/messages/:requestId/stop` | Stop a response in progress |
 
-The response-generation route is limited to 10 requests per 60 seconds. Requests are validated, and the API's CORS origin is set by `FRONTEND_URL`.
+The routes that create chats, generate responses or titles, and stop responses are each limited to 10 requests per 60 seconds per user. Requests are validated, and the API's CORS origin is set by `FRONTEND_URL`.
 
 ## Project structure
 

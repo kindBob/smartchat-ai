@@ -4,14 +4,15 @@ import type { ChatType } from "../types/Chat";
 import {
     createChat as createChatRequest,
     deleteChat as deleteChatRequest,
+    fetchChatMessages,
     fetchChats,
     updateChat as updateChatRequest,
 } from "../api/chatApi";
 import { loadActiveChatId, saveActiveChatId } from "../utils/chatStorage";
-import { mapChat } from "../utils/mapChat";
+import { mapChat, mapChatSummary, mapMessage } from "../utils/mapChat";
 import { getErrorMessage } from "../utils/getErrorMessage";
 
-const isEmptyChat = (chat: ChatType) => !chat.messages.some((m) => m.sender === "user");
+const isEmptyChat = (chat: ChatType) => !chat.hasUserMessages && !chat.messages.some((m) => m.sender === "user");
 
 export function useChats() {
     const [chats, setChats] = useState<ChatType[]>([]);
@@ -22,11 +23,13 @@ export function useChats() {
 
     const hasLoadedRef = useRef(false);
     const isCreatingRef = useRef(false);
+    const loadingMessagesRef = useRef(new Set<string>());
 
     const chatsRef = useRef<ChatType[]>(chats);
 
     const activeChat = chats.find((c) => c.id === selectedChatId) ?? chats[0];
     const activeChatId = activeChat?.id ?? null;
+    const activeMessagesStatus = activeChat?.messagesStatus;
 
     const loadChats = useCallback(async () => {
         if (hasLoadedRef.current) return;
@@ -36,7 +39,7 @@ export function useChats() {
         setIsLoading(true);
 
         try {
-            let loaded = (await fetchChats()).map(mapChat);
+            let loaded = (await fetchChats()).map(mapChatSummary);
 
             if (loaded.length === 0) {
                 loaded = [mapChat(await createChatRequest("New Chat"))];
@@ -55,9 +58,34 @@ export function useChats() {
         }
     }, []);
 
+    const loadMessages = useCallback(async (chatId: string) => {
+        if (loadingMessagesRef.current.has(chatId)) return;
+        loadingMessagesRef.current.add(chatId);
+
+        const updateChat = (update: Partial<ChatType>) =>
+            setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, ...update } : c)));
+
+        updateChat({ messagesStatus: "loading" });
+
+        try {
+            const messages = (await fetchChatMessages(chatId)).map(mapMessage);
+
+            updateChat({ messages, messagesStatus: "loaded" });
+        } catch (error) {
+            console.error("Failed to load messages:", error);
+            updateChat({ messagesStatus: "error" });
+        } finally {
+            loadingMessagesRef.current.delete(chatId);
+        }
+    }, []);
+
     useEffect(() => {
         loadChats();
     }, [loadChats]);
+
+    useEffect(() => {
+        if (activeChatId && activeMessagesStatus === "idle") loadMessages(activeChatId);
+    }, [activeChatId, activeMessagesStatus, loadMessages]);
 
     useEffect(() => {
         if (activeChatId) saveActiveChatId(activeChatId);
@@ -193,6 +221,7 @@ export function useChats() {
         loadError,
         isCreatingChat,
         loadChats,
+        loadMessages,
         selectChat: setSelectedChatId,
         createNewChat,
         deleteChat,

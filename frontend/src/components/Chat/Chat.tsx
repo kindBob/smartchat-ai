@@ -10,12 +10,13 @@ type ChatProps = {
     onSend: (userMessage: string) => void;
     onStop: () => void;
     onRetry: () => void;
+    onRetryLoad: () => void;
     onPinChat: (id: string) => void;
     onRenameChat: (id: string, newTitle: string) => void;
     onDeleteChat: (id: string) => void;
 };
 
-function Chat({ chat, onSend, onStop, onRetry, onPinChat, onRenameChat, onDeleteChat }: ChatProps) {
+function Chat({ chat, onSend, onStop, onRetry, onRetryLoad, onPinChat, onRenameChat, onDeleteChat }: ChatProps) {
     const [isAtBottom, setIsAtBottom] = useState(true);
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -24,6 +25,9 @@ function Chat({ chat, onSend, onStop, onRetry, onPinChat, onRenameChat, onDelete
     function scrollToBottom() {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
+
+    const messagesLoaded = chat.messagesStatus === "loaded";
+    const messagesFailed = chat.messagesStatus === "error";
 
     return (
         <div className="chat">
@@ -36,9 +40,9 @@ function Chat({ chat, onSend, onStop, onRetry, onPinChat, onRenameChat, onDelete
             />
             <MessageList
                 messages={chat.messages}
-                onRetry={onRetry}
-                isResponseLoading={chat.isResponseLoading}
-                error={chat?.error}
+                onRetry={messagesFailed ? onRetryLoad : onRetry}
+                isResponseLoading={chat.isResponseLoading || (!messagesLoaded && !messagesFailed)}
+                error={messagesFailed ? "Could not load this chat." : chat.error}
                 bottomRef={bottomRef}
                 isAtBottom={isAtBottom}
                 setIsAtBottom={setIsAtBottom}
@@ -47,6 +51,7 @@ function Chat({ chat, onSend, onStop, onRetry, onPinChat, onRenameChat, onDelete
                 onSend={onSend}
                 onStop={onStop}
                 isGenerating={chat.isResponseLoading || chat.isTyping}
+                canSend={messagesLoaded}
                 isAtBottom={isAtBottom}
                 onScrollDown={scrollToBottom}
             />

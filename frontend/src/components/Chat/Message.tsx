@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { MessageType } from "../../types/Chat";
 import Markdown from "../markdown/Markdown";
 
@@ -20,4 +21,4 @@ function Message({ text, sender, timestamp }: MessageType) {
     );
 }
 
-export default Message;
+export default memo(Message);
