@@ -17,8 +17,8 @@ import type * as Prisma from "./prismaNamespace.js"
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [],
-  "clientVersion": "7.10.0",
-  "engineVersion": "0edf323efd1d98336f3f0a68684b56f689b900d3",
+  "clientVersion": "7.10.1",
+  "engineVersion": "d1b3f377ca835d73fd50954a5e22128b9ebdd6b8",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum MessageRole {\n  USER\n  MODEL\n}\n\nmodel Chat {\n  id            String    @id @default(cuid())\n  title         String    @default(\"New Chat\")\n  userId        String\n  createdAt     DateTime  @default(now())\n  updatedAt     DateTime  @updatedAt\n  lastMessageAt DateTime  @default(now())\n  pinnedAt      DateTime?\n\n  messages Message[]\n\n  @@index([userId])\n}\n\nmodel Message {\n  id        String      @id @default(cuid())\n  text      String\n  role      MessageRole\n  chatId    String\n  createdAt DateTime    @default(now())\n\n  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)\n\n  @@index([chatId, createdAt])\n}\n",
   "runtimeDataModel": {
