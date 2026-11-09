@@ -5,6 +5,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import { CustomThrottlerGuard } from "./common/guards/custom-throttler.guard.js";
 import { PrismaModule } from "./database/prisma.module.js";
+import { UnverifiedUsersCleanupService } from "./auth/unverified-users-cleanup.service.js";
 
 @Module({
     imports: [
@@ -20,5 +21,6 @@ import { PrismaModule } from "./database/prisma.module.js";
         ChatModule,
         PrismaModule,
     ],
+    providers: [UnverifiedUsersCleanupService],
 })
 export class AppModule {}
