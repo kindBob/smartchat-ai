@@ -1,9 +1,10 @@
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "../../auth";
-import { sendVerificationCode } from "../../utils/authHelpers";
+import { clearOAuthErrorFromUrl, getOAuthErrorMessage, sendVerificationCode } from "../../utils/authHelpers";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import AuthMessages from "./AuthMessages";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 type CredentialsFormProps = {
     view: "sign-in" | "sign-up";
@@ -11,6 +12,7 @@ type CredentialsFormProps = {
     password: string;
     onEmailChange: (email: string) => void;
     onPasswordChange: (password: string) => void;
+    onForgotPassword: () => void;
     onToggleView: () => void;
     onStartVerification: (normalizedEmail: string) => void;
     onAuthSuccess: () => Promise<void>;
@@ -22,22 +24,39 @@ function CredentialsForm({
     password,
     onEmailChange,
     onPasswordChange,
+    onForgotPassword,
     onToggleView,
     onStartVerification,
     onAuthSuccess,
 }: CredentialsFormProps) {
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [redirecting, setRedirecting] = useState(false);
+    const [error, setError] = useState<string | null>(getOAuthErrorMessage);
     const [success, setSuccess] = useState<string | null>(null);
     const [name, setName] = useState("");
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    const busy = loading || redirecting;
+
+    useEffect(() => {
+        clearOAuthErrorFromUrl();
+
+        // Going back from Google can restore this page from the browser's cache with the form still disabled
+        function handlePageShow(e: PageTransitionEvent) {
+            if (e.persisted) setRedirecting(false);
+        }
+
+        window.addEventListener("pageshow", handlePageShow);
+
+        return () => window.removeEventListener("pageshow", handlePageShow);
+    }, []);
+
     async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        if (loading) return;
+        if (busy) return;
 
         setError(null);
         setSuccess(null);
@@ -131,6 +150,34 @@ function CredentialsForm({
         }
     }
 
+    async function handleGoogleSignIn() {
+        if (busy) return;
+
+        setError(null);
+        setSuccess(null);
+        setRedirecting(true);
+
+        try {
+            const result = await authClient.signIn.social({
+                provider: "google",
+                callbackURL: window.location.origin,
+                errorCallbackURL: window.location.origin,
+            });
+
+            if (result.error) {
+                setError(result.error.message || "Could not sign in with Google.");
+                setRedirecting(false);
+            }
+
+            // On success the browser is leaving the page, so the button stays in its redirecting state
+        } catch (err) {
+            console.error("Google sign-in error:", err);
+
+            setError(getErrorMessage(err, "Could not sign in with Google."));
+            setRedirecting(false);
+        }
+    }
+
     return (
         <main className="auth-page">
             <div className="auth-card">
@@ -145,6 +192,10 @@ function CredentialsForm({
                             : "Sign in to continue with SmartChat AI."}
                     </p>
                 </div>
+
+                <GoogleSignInButton onClick={handleGoogleSignIn} disabled={busy} redirecting={redirecting} />
+
+                <div className="auth-divider">or</div>
 
                 <form className="auth-form" onSubmit={handleSubmit} noValidate>
                     <AuthMessages error={error} success={success} />
@@ -165,7 +216,7 @@ function CredentialsForm({
                                 autoCapitalize="words"
                                 spellCheck={false}
                                 required
-                                disabled={loading}
+                                disabled={busy}
                             />
                         </div>
                     )}
@@ -186,7 +237,7 @@ function CredentialsForm({
                             autoCapitalize="none"
                             spellCheck={false}
                             required
-                            disabled={loading}
+                            disabled={busy}
                         />
                     </div>
 
@@ -206,7 +257,7 @@ function CredentialsForm({
                                 autoComplete={view === "sign-up" ? "new-password" : "current-password"}
                                 required
                                 minLength={view === "sign-up" ? 8 : undefined}
-                                disabled={loading}
+                                disabled={busy}
                             />
 
                             <button
@@ -215,10 +266,16 @@ function CredentialsForm({
                                 onClick={() => setPasswordVisible((prev) => !prev)}
                                 aria-label={passwordVisible ? "Hide password" : "Show password"}
                                 aria-pressed={passwordVisible}
-                                disabled={loading}>
+                                disabled={busy}>
                                 {passwordVisible ? <Eye /> : <EyeOff />}
                             </button>
                         </div>
+
+                        {view === "sign-in" && (
+                            <button className="auth-forgot" type="button" onClick={onForgotPassword} disabled={busy}>
+                                Forgot password?
+                            </button>
+                        )}
                     </div>
 
                     {view === "sign-up" && (
@@ -238,7 +295,7 @@ function CredentialsForm({
                                     autoComplete={"new-password"}
                                     required
                                     minLength={8}
-                                    disabled={loading}
+                                    disabled={busy}
                                 />
 
                                 <button
@@ -247,14 +304,14 @@ function CredentialsForm({
                                     onClick={() => setConfirmPasswordVisible((prev) => !prev)}
                                     aria-label={confirmPasswordVisible ? "Hide password" : "Show password"}
                                     aria-pressed={confirmPasswordVisible}
-                                    disabled={loading}>
+                                    disabled={busy}>
                                     {confirmPasswordVisible ? <Eye /> : <EyeOff />}
                                 </button>
                             </div>
                         </div>
                     )}
 
-                    <button className="auth-submit" type="submit" disabled={loading}>
+                    <button className="auth-submit" type="submit" disabled={busy}>
                         {loading ? "Please wait..." : view === "sign-up" ? "Create account" : "Sign in"}
                     </button>
                 </form>
@@ -268,7 +325,7 @@ function CredentialsForm({
                             setError(null);
                             onToggleView();
                         }}
-                        disabled={loading}>
+                        disabled={busy}>
                         {view === "sign-up" ? "Sign in" : "Create account"}
                     </button>
                 </div>

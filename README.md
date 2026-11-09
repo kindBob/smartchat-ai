@@ -4,7 +4,8 @@ SmartChat AI is a full-stack chat application that lets users have conversations
 
 ## Features
 
-- Email sign-up and sign-in with email verification, powered by Neon Auth
+- Email sign-up and sign-in with email verification and password reset, plus Google sign-in, powered by Neon Auth
+- Daily removal of unverified accounts older than 24 hours, unless they own chats or have a session, organization membership, or linked social login
 - Private chat histories stored in PostgreSQL
 - Create, rename, and delete conversations
 - Gemini-generated responses and concise chat titles
@@ -26,7 +27,7 @@ SmartChat AI is a full-stack chat application that lets users have conversations
 
 ```text
 React + TypeScript frontend
-  ├── Neon Auth (email authentication)
+  ├── Neon Auth (email and Google authentication)
   └── Authenticated REST requests
           │
           ▼
@@ -80,6 +81,8 @@ VITE_NEON_AUTH_URL=your-neon-auth-url
 ```
 
 Use the same Neon Auth URL for `VITE_NEON_AUTH_URL` and the backend's `NEON_AUTH_URL`. Configure Neon Auth for the application and its email verification flow before signing up.
+
+Google sign-in works in development with Neon's shared credentials. For production, create your own Google OAuth client, register `{NEON_AUTH_URL}/callback/google` as its authorized redirect URI, add the client ID and secret to the Neon Auth branch, and add the frontend's origin to the branch's trusted domains. See [Set up OAuth](https://neon.com/docs/auth/guides/setup-oauth).
 
 ### 4. Install dependencies and prepare the database
 
