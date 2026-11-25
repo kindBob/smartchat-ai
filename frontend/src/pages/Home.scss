@@ -3,6 +3,7 @@
     width: 100%;
     height: 100dvh;
     overflow: hidden;
+    background: var(--red);
 }
 
 .chat-empty {
@@ -14,7 +15,14 @@
 
     text-align: center;
 
-    color: #fff;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-variation-settings:
+        "BLED" 50,
+        "SCAN" -20;
+    font-size: clamp(1rem, 4vw, 2rem);
+    text-transform: uppercase;
+    text-shadow: var(--glow-strong);
 }
 
 .home-loading {
@@ -24,51 +32,72 @@
     align-items: center;
     justify-content: center;
 
-    background: #f7f7f2;
-    color: #6f7568;
+    background: var(--red);
+    color: var(--ink);
 }
 
 .loading-logo {
-    width: 52px;
-    height: 52px;
-    margin-bottom: 24px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 28px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: 14px;
+    border-radius: 0;
 
-    background: #a5b68d;
-    color: #fff;
+    background: var(--ink);
+    color: var(--red);
 
-    font-size: 24px;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 28px;
+    text-shadow: var(--glow);
 
-    box-shadow: 0 8px 24px rgba(80, 90, 70, 0.12);
+    animation: logo-develop 2.4s ease-in-out infinite;
 }
 
 .loading-spinner {
     width: 22px;
     height: 22px;
 
-    border: 2px solid #dfe3d7;
-    border-top-color: #a5b68d;
-    border-radius: 50%;
+    border: 3px solid var(--ink-faint);
+    border-top-color: var(--ink);
+    border-radius: 0;
 
-    animation: loading-spin 0.8s linear infinite;
+    animation: loading-spin 0.8s steps(8) infinite;
 }
 
 .home-loading p {
-    margin: 14px 0 0;
+    margin: 16px 0 0;
 
+    font-family: var(--font-narrow);
     font-size: 14px;
-    color: #8a8f84;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
 }
 
 @keyframes loading-spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+// the logo glyph slowly "develops" by cycling Sixtyfour's scanline axis
+@keyframes logo-develop {
+    0%,
+    100% {
+        font-variation-settings:
+            "BLED" 50,
+            "SCAN" -53;
+    }
+
+    50% {
+        font-variation-settings:
+            "BLED" 0,
+            "SCAN" 70;
     }
 }
 
@@ -89,18 +118,19 @@
     height: 40px;
     padding: 0;
 
-    border: none;
-    border-radius: 10px;
-    background: #242424;
-    color: #fff;
+    border: 1px solid var(--red);
+    border-radius: 0;
+    background: var(--ink);
+    color: var(--red);
 
     cursor: pointer;
     z-index: 20;
 
-    transition: 0.2s ease;
+    transition: 0.15s ease;
 
     &:hover {
-        background: #303030;
+        background: var(--red);
+        color: var(--ink);
     }
 
     svg {
@@ -128,25 +158,32 @@
 
         padding: 0;
 
-        border: none;
-        border-radius: 10px;
+        border: 1px solid var(--red);
+        border-radius: 0;
 
-        background: #242424;
-        color: #fff;
+        background: var(--ink);
+        color: var(--red);
 
         cursor: pointer;
 
         z-index: 20;
 
-        transition: 0.2s ease;
+        transition: 0.15s ease;
 
         &:hover {
-            background: #303030;
+            background: var(--red);
+            color: var(--ink);
         }
 
         svg {
             width: 65%;
             height: 65%;
         }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-logo {
+        animation: none;
     }
 }

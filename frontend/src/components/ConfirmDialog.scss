@@ -1,46 +1,54 @@
 .confirm-dialog {
-    width: min(400px, calc(100% - 32px));
+    width: min(420px, calc(100% - 32px));
     margin: auto;
     padding: 0;
 
-    border: 1px solid #414141;
-    border-radius: 14px;
+    border: 1px solid var(--red);
+    border-radius: 0;
 
-    background: #2f2f2f;
-    color: #fff;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+    background: var(--ink);
+    color: var(--red);
+    box-shadow: 10px 10px 0 var(--ink);
 
     &[open] {
         animation: confirmDialogAppear 0.15s ease-out;
     }
 
     &::backdrop {
-        background: rgba(5, 5, 5, 0.6);
+        background: rgba(26, 0, 0, 0.6);
     }
 
     &__content {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
 
-        padding: 22px 22px 18px;
+        padding: 24px 24px 20px;
     }
 
     &__title {
-        font-size: 18px;
-        font-weight: 600;
+        font-family: var(--font-display);
+        font-variation-settings:
+            "BLED" 0,
+            "SCAN" -40;
+        font-size: 16px;
+        font-weight: normal;
         line-height: 1.3;
+        text-transform: uppercase;
+        text-shadow: var(--glow);
     }
 
     &__message {
-        font-size: 14px;
+        font-family: var(--font-narrow);
+        font-size: 15px;
         line-height: 1.5;
-        color: #c9c9c9;
+        color: var(--red-soft);
         overflow-wrap: anywhere;
 
         strong {
-            color: #fff;
-            font-weight: 600;
+            color: var(--red);
+            font-weight: 700;
+            text-shadow: var(--glow);
         }
     }
 
@@ -53,45 +61,45 @@
     }
 
     &__button {
-        padding: 9px 16px;
+        padding: 10px 16px;
 
-        border: 1px solid #4a4a4a;
-        border-radius: 8px;
+        border: 1px solid var(--red);
+        border-radius: 0;
         background: transparent;
-        color: #fff;
+        color: var(--red);
 
-        font-family: inherit;
-        font-size: 14px;
-        font-weight: 500;
+        font-family: var(--font-display);
+        font-size: 11px;
+        text-transform: uppercase;
+        text-shadow: var(--glow);
 
         cursor: pointer;
-        transition: 0.15s ease;
+        transition: 0.12s ease;
 
         &:hover {
-            background: #414141;
-        }
-
-        &:focus-visible {
-            outline: 2px solid #a5b68d;
-            outline-offset: 2px;
+            background: var(--red-faint);
         }
 
         &.--primary {
-            border-color: transparent;
-            background: #a5b68d;
-            color: #1f2618;
+            background: var(--red);
+            color: var(--ink);
+            text-shadow: none;
 
             &:hover {
-                background: #b7c79f;
+                background: var(--paper);
+                border-color: var(--paper);
             }
         }
 
         &.--danger {
-            border-color: transparent;
-            background: #c94a4a;
+            border-color: var(--paper);
+            background: var(--paper);
+            color: var(--ink);
+            text-shadow: none;
 
             &:hover {
-                background: #d85c5c;
+                background: var(--red);
+                border-color: var(--red);
             }
         }
     }

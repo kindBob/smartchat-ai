@@ -1,6 +1,29 @@
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&family=Sixtyfour:BLED,SCAN@0..100,-53..100&family=Workbench:BLED,SCAN@0..100,-53..100&display=swap");
 
-$font-main: "Open Sans", sans-serif;
+// "Darkroom" palette: safelight red paper, near-black ink, glowing red type on ink.
+:root {
+    --red: #ff1515;
+    --ink: #1a0000;
+    --paper: #f8f2f2;
+
+    --ink-soft: rgba(26, 0, 0, 0.7);
+    --ink-faint: rgba(26, 0, 0, 0.18);
+    --red-soft: rgba(255, 21, 21, 0.7);
+    --red-faint: rgba(255, 21, 21, 0.14);
+    --red-line: rgba(255, 21, 21, 0.35);
+
+    --font-display: "Sixtyfour", ui-monospace, monospace;
+    --font-head: "Workbench", ui-monospace, monospace;
+    --font-narrow: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;
+    --font-text: Arial, Helvetica, sans-serif;
+
+    // red-on-ink type gets a faint phosphor bloom
+    --glow: 0 0 0.08rem var(--red), 0 0 0.08rem var(--red);
+    --glow-strong: -0.1rem 0.1rem 0.4rem rgb(255, 13, 13), -0.1rem 0.1rem 0.4rem rgb(255, 35, 35);
+
+    color-scheme: dark;
+    text-wrap: pretty;
+}
 
 *,
 *::before,
@@ -11,16 +34,46 @@ $font-main: "Open Sans", sans-serif;
 }
 
 body {
-    font-family: $font-main;
-    background: #121212;
+    font-family: var(--font-narrow);
+    letter-spacing: 0.008em;
+    background: var(--red);
+    color: var(--ink);
 }
 
 ::selection {
-    background-color: #b5b5b5a1;
+    background-color: var(--ink);
+    color: var(--red);
+}
+
+// a selection inside an ink block flips the other way
+:where(.sidebar, .chat-header, .chat-input, .message--user, .code-block, .actions-menu, .confirm-dialog, .auth-card)
+    ::selection {
+    background-color: var(--red);
+    color: var(--ink);
+}
+
+:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 2px;
+}
+
+[data-sonner-toast] {
+    border-radius: 0 !important;
+    font-family: var(--font-narrow) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-shadow: var(--glow);
+}
+
+[data-sonner-toast] [data-close-button] {
+    border-radius: 0 !important;
+    background: var(--ink) !important;
+    border-color: var(--red) !important;
+    color: var(--red) !important;
 }
 
 [data-sonner-toast] [data-close-button]:hover {
-    background: #fff !important;
-    border-color: #fff !important;
-    color: #000 !important;
+    background: var(--red) !important;
+    border-color: var(--red) !important;
+    color: var(--ink) !important;
 }

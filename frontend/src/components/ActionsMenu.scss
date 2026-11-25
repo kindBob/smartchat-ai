@@ -4,15 +4,15 @@
 .actions-menu {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 
-    min-width: 160px;
-    padding: 6px;
+    min-width: 170px;
+    padding: 4px;
 
-    background: #2f2f2f;
-    border: 1px solid #414141;
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    background: var(--ink);
+    border: 1px solid var(--red);
+    border-radius: 0;
+    box-shadow: 6px 6px 0 var(--ink);
 
     animation: actionsMenuAppear 0.15s ease-out;
 
@@ -26,17 +26,20 @@
         padding: 10px 12px;
 
         border: none;
-        border-radius: 8px;
+        border-radius: 0;
         background: transparent;
 
-        color: #fff;
-        font-family: inherit;
+        color: var(--red);
+        font-family: var(--font-narrow);
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 700;
         text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        text-shadow: var(--glow);
 
         cursor: pointer;
-        transition: background-color 0.15s ease;
+        transition: 0.12s ease;
 
         svg {
             flex-shrink: 0;
@@ -44,16 +47,21 @@
 
         &:hover,
         &:focus-visible {
-            background: #414141;
+            background: var(--red);
+            color: var(--ink);
+            text-shadow: none;
             outline: none;
         }
 
+        // danger reads as a negative: paper-white type
         &.--danger {
-            color: #ff6b6b;
+            color: var(--paper);
+            text-shadow: none;
 
             &:hover,
             &:focus-visible {
-                background: rgba(122, 53, 53, 0.45);
+                background: var(--paper);
+                color: var(--ink);
             }
         }
     }

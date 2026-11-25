@@ -9,7 +9,7 @@ createRoot(document.getElementById("root")!).render(
         <App />
         <Toaster
             className="toaster"
-            theme="light"
+            theme="dark"
             position="top-center"
             duration={3000}
             visibleToasts={3}
@@ -21,12 +21,12 @@ createRoot(document.getElementById("root")!).render(
             }}
             style={
                 {
-                    "--normal-bg": "#2a2a2a",
-                    "--normal-text": "#fff",
-                    "--normal-border": "rgba(255, 255, 255, 0.08)",
-                    "--error-bg": "#2a2a2a",
-                    "--error-text": "#fff",
-                    "--error-border": "rgba(218, 131, 89, 0.5)",
+                    "--normal-bg": "#1a0000",
+                    "--normal-text": "#ff1515",
+                    "--normal-border": "#ff1515",
+                    "--error-bg": "#1a0000",
+                    "--error-text": "#ff1515",
+                    "--error-border": "#ff1515",
                 } as React.CSSProperties
             }
         />
